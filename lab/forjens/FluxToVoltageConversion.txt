@@ -1,0 +1,5 @@
+1 flux quantum = 8.02 V
+
+The calibrating waves contain:
+frequency, Hz
+magnetic field, V
