@@ -5,8 +5,6 @@ from scipy import array, sqrt, exp, pi, factorial
 from scipy.linalg import eig
 from scipy.special import genlaguerre
 
-MATRIX_RADIUS = 8
-
 def hamiltonian(size, EC, EJ, EL):
     hbar_w0 = sqrt( 8. * EL * EC )
     phi0 = ( 8. * EC / EL ) ** .25
@@ -20,37 +18,19 @@ def hamiltonian(size, EC, EJ, EL):
             #the nonzero cosine elements
             if (col-row)%2==0:
                 n = row
-                m = (col-row)/2
+                m = abs(col-row)/2 # because of Hermitianness
                 a[row][col] += (-2)**-m * sqrt(factorial(n)/factorial(n+2*m)) \
                                * phi0**(2*m) * exp(phi0**2/-4) \
                                * genlaguerre(n,2*m)(phi0**2/2)
             #the nonzero cosine elements
             else:
                 n = row
-                m = (col-row-1)/2
+                m = (abs(col-row)-1)/2
                 a[row][col] += (-2)**-m*sqrt(factorial(n)/factorial(n+2*m+1)) \
                                * phi0**(2*m+1) * exp(phi0**2/-4) \
                                * genlaguerre(n,2*m+1)(phi0**2/2)
             
     return a
-
-def make_plot( image_name, tmp_names, EJoverEC ):
-    out = os.popen( "gnuplot", "w" )
-    out.write( "set terminal png \n set output '%s'\n" % image_name )
-    out.write( "set key off \n" )
-    out.write( "set title 'Ej/Ec = %.2f' \n" % EJoverEC )
-    out.write( "set yrange [-30:30] \n" )
-    
-    FIRST_STYLE = "with lines lt 1 lw 2"
-    SECOND_STYLE = "with lines lt 2 lw 1"
-    plot_command = "plot '%s' %s" % (tmp_names[0],FIRST_STYLE)
-    for i in tmp_names[1:]:
-        plot_command += ", '%s' %s" % (i,FIRST_STYLE)
-#     for i in overlay_names:
-#         plot_command += ", '%s' %s" % (i,SECOND_STYLE)
-    out.write(plot_command)
-
-    out.close()
 
 def sorted_eig( array ): ### real values only...
     vals, vecs = eig(array)
@@ -61,65 +41,28 @@ def sorted_eig( array ): ### real values only...
     ret.sort(cmp=cmp)
     return ret
 
-# def phi_waveform( n_array, phi ):
-#     n_indices = range(-(len(n_array)/2), len(n_array)/2+1)
-#     if len(n_array)!=len(n_indices):
-#         raise RuntimeError, "Uh oh"
-#     ret = 0
-#     for n,coeff in zip(n_indices, n_array):
-#         ret += coeff * 1/sqrt(2*pi) * exp(1j*phi*n)
-#     return abs(ret)**2
-
 def main():
-    if len(sys.argv)<2:
-        sys.stderr.write( "Supply a value for EJoverEC.\n" )
-        sys.exit(1)
-    EJoverEC = float(sys.argv[1])
+#     if len(sys.argv)<2:
+#         sys.stderr.write( "Supply a value for EJoverEC.\n" )
+#         sys.exit(1)
+#     EJoverEC = float(sys.argv[1])
+
+    EC = 1
+    EJ = 1
+    EL = 1
 
     num_levels = 5
 
-    tmp_names_en = [ os.popen("mktemp").read()[:-1] for i in range(num_levels) ]
-    tmp_handles_en = [ open(i,"w") for i in tmp_names_en ]
-
-#     tmp_names_wave = [ os.popen("mktemp").read()[:-1] for i in range(num_levels) ]
-#     tmp_handles_wave = [ open(i,"w") for i in tmp_names_wave ]
-
-    image_name = os.popen("mktemp").read()[:-1]
-    os.system("mv %s %s.png" % (image_name,image_name))
-    image_name += ".png"
-
-    ng_rad = 2
-    num_pts = 100
-    for i in range(num_pts):
-        ng = -ng_rad + 2.*ng_rad/num_pts*i
-        A = hamiltonian(MATRIX_RADIUS,ng,EJoverEC)
+    for i in range(num_levels,20):
+        matrix_size = i
+        A = hamiltonian(matrix_size,EC,EJ,EL)
         e = sorted_eig(A)
-        for j in range(num_levels):
-            tmp_handles_en[j].write("%f %f\n" % (ng,e[j][0]))
-    for i in tmp_handles_en:
-        i.close()
-
-#     phi_rad_factor = pi
-#     waveform_scale_factor = 5
-#     phi_ng_value = 0
-#     A = hamiltonian(MATRIX_RADIUS,phi_ng_value,EJoverEC)
-#     e = sorted_eig(A)
-
-#     for i in range(num_pts):
-#         phi = -ng_rad + 2.*ng_rad/num_pts*i # ng_rad used for axis consistency
-#         for j in range(num_levels):
-#             tmp_handles_wave[j].write("%f %f\n" % (phi,
-#                                waveform_scale_factor * \
-#                                phi_waveform(e[j][1],phi*phi_rad_factor) + \
-#                                e[j][0]) )
-#     for i in tmp_handles_wave:
-#         i.close()
-
-    make_plot(image_name,tmp_names_en,EJoverEC)
-    os.system("display %s" % image_name)
-
+        print
+        print i
+        print
+        for i in e[:num_levels]: print i[0]
+        print
+    
 
 if __name__=='__main__':
     main()
-
-
