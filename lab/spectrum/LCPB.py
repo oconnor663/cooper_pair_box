@@ -7,7 +7,7 @@ from scipy.special import genlaguerre
 
 def hamiltonian(size, EC, EJ, EL):
     hbar_w0 = sqrt( 8. * EL * EC )
-    phi0 = ( 8. * EC / EL ) ** .25
+    phi0 = ( 8. * EC / EL ) ** .25 
 
     a = array([[0. for i in xrange(size)] for i in xrange(size)])
     for row in xrange(size):
@@ -17,19 +17,21 @@ def hamiltonian(size, EC, EJ, EL):
                 a[row][col] += hbar_w0 * (row+0.5)
             #the nonzero cosine elements
             if (col-row)%2==0:
-                n = row
+                n = row if row<col else col
                 m = abs(col-row)/2 # because of Hermitianness
-                a[row][col] += (-2)**-m * sqrt(factorial(n)/factorial(n+2*m)) \
+                a[row][col] += -EJ * (-2)**-m * sqrt(factorial(n)/factorial(n+2*m)) \
                                * phi0**(2*m) * exp(phi0**2/-4) \
                                * genlaguerre(n,2*m)(phi0**2/2)
-            #the nonzero cosine elements
+            #the nonzero sine elements
             else:
-                n = row
+                continue  # flux term needs to be fixed
+                n = row # THIS IS WRONG
                 m = (abs(col-row)-1)/2
-                a[row][col] += (-2)**-m*sqrt(factorial(n)/factorial(n+2*m+1)) \
+                a[row][col] += -EJ * (-2)**-m*sqrt(factorial(n)/factorial(n+2*m+1)) \
                                * phi0**(2*m+1) * exp(phi0**2/-4) \
                                * genlaguerre(n,2*m+1)(phi0**2/2)
             
+    print a
     return a
 
 def sorted_eig( array ): ### real values only...
@@ -53,7 +55,8 @@ def main():
 
     num_levels = 5
 
-    for i in range(num_levels,20):
+#    for i in range(num_levels,20):
+    for i in range(5,6):
         matrix_size = i
         A = hamiltonian(matrix_size,EC,EJ,EL)
         e = sorted_eig(A)
