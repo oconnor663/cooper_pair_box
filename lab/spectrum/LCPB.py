@@ -1,13 +1,14 @@
 #! /usr/bin/python
 
 import sys,os
-from scipy import array, sqrt, exp, pi, factorial
+from scipy import array, sqrt, exp, pi, factorial, cos, sin
 from scipy.linalg import eig
 from scipy.special import genlaguerre
 
-def hamiltonian(size, EC, EJ, EL):
+def hamiltonian(size, EC, EJ, EL, flux):
     hbar_w0 = sqrt( 8. * EL * EC )
     phi0 = ( 8. * EC / EL ) ** .25 
+    flux0 = 1
 
     a = array([[0. for i in xrange(size)] for i in xrange(size)])
     for row in xrange(size):
@@ -19,19 +20,22 @@ def hamiltonian(size, EC, EJ, EL):
             if (col-row)%2==0:
                 n = row if row<col else col
                 m = abs(col-row)/2 # because of Hermitianness
-                a[row][col] += -EJ * (-2)**-m * sqrt(factorial(n)/factorial(n+2*m)) \
-                               * phi0**(2*m) * exp(phi0**2/-4) \
-                               * genlaguerre(n,2*m)(phi0**2/2)
+                a[row][col] += \
+                    -EJ * cos(2*pi*flux/flux0) * (-2)**-m \
+                    * sqrt(factorial(n)/factorial(n+2*m)) \
+                    * phi0**(2*m) * exp(phi0**2/-4) \
+                    * genlaguerre(n,2*m)(phi0**2/2)
             #the nonzero sine elements
             else:
-                continue  # flux term needs to be fixed
-                n = row # THIS IS WRONG
+                ### IS THIS PART RIGHT?
+                n = row if row<col else col
                 m = (abs(col-row)-1)/2
-                a[row][col] += -EJ * (-2)**-m*sqrt(factorial(n)/factorial(n+2*m+1)) \
-                               * phi0**(2*m+1) * exp(phi0**2/-4) \
-                               * genlaguerre(n,2*m+1)(phi0**2/2)
+                a[row][col] += \
+                    EJ * sin(2*pi*flux/flux0) * (-2)**-m \
+                    * sqrt(factorial(n)/factorial(n+2*m+1)) \
+                    * phi0**(2*m+1) * exp(phi0**2/-4) \
+                    * genlaguerre(n,2*m+1)(phi0**2/2) ## NEGATIVES CANCEL HERE???
             
-    print a
     return a
 
 def sorted_eig( array ): ### real values only...
@@ -44,27 +48,22 @@ def sorted_eig( array ): ### real values only...
     return ret
 
 def main():
-#     if len(sys.argv)<2:
-#         sys.stderr.write( "Supply a value for EJoverEC.\n" )
-#         sys.exit(1)
-#     EJoverEC = float(sys.argv[1])
 
     EC = 1
     EJ = 1
     EL = 1
+    FLUX = 0
 
+    matrix_size = 50
     num_levels = 5
-
-#    for i in range(num_levels,20):
-    for i in range(5,6):
-        matrix_size = i
-        A = hamiltonian(matrix_size,EC,EJ,EL)
-        e = sorted_eig(A)
-        print
-        print i
-        print
-        for i in e[:num_levels]: print i[0]
-        print
+    
+    print "Populating Matrix..."
+    A = hamiltonian(matrix_size,EC,EJ,EL,FLUX)
+    print "Diagonalizing..."
+    #print A
+    e = sorted_eig(A)
+    print "\nEnergies:"
+    for i in e[:num_levels]: print i[0]
     
 
 if __name__=='__main__':
