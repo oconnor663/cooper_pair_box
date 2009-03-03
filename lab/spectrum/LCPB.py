@@ -52,15 +52,15 @@ def main():
     EC = 1
     EJ = 1
     EL = 1
-    FLUX = 0
+    FLUX = .25
 
-    matrix_size = 50
+    matrix_size = 4
     num_levels = 5
     
     print "Populating Matrix..."
     A = hamiltonian(matrix_size,EC,EJ,EL,FLUX)
     print "Diagonalizing..."
-    #print A
+    print A
     e = sorted_eig(A)
     print "\nEnergies:"
     for i in e[:num_levels]: print i[0]
