@@ -10,7 +10,7 @@ from scipy.special import genlaguerre
 #### it will need EL and EC as parameters (for phi0), in
 #### addition to a size
 #### 
-####
+
 
 
 def hamiltonian(size, EC, EJ, EL, flux):
@@ -62,7 +62,7 @@ def main():
     EL = 1
     FLUX = .25
 
-    matrix_size = 100
+    matrix_size = 50
     num_levels = 5
     
     print "Populating Matrix..."
