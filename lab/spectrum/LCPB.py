@@ -3,7 +3,7 @@
 import sys,os
 from scipy import array, sqrt, exp, pi, factorial, cos, sin
 from scipy.linalg import eig
-from scipy.special import genlaguerre
+from scipy.special import genlaguerre, poly1d
 
 ####
 #### Create a function that gives an array of genlaguerres.
@@ -11,7 +11,24 @@ from scipy.special import genlaguerre
 #### addition to a size
 #### 
 
+def ineff_test( phi0, size ):
+    ret = [ [genlaguerre(i,j)(phi0**2/2) for j in range(size)]
+            for i in range(size) ]
+    return ret
 
+def genlaguerre_array( phi0, size ):
+    arg = phi0**2/2
+
+    ret = [ [ 0 for a in range(size) ] for n in range(size) ]
+    for a in range(size):
+        ret[0][a] = genlaguerre(0,a)
+        ret[1][a] = genlaguerre(1,a)
+        for n in range(2,size):
+            ret[n][a] = ((2*(n-1)+a+1-poly1d([1,0]))*ret[n-1][a] - \
+                             (n-1+a)*ret[n-2][a] ) /n
+        for n in range(size):
+            ret[n][a] = ret[n][a](arg)
+    return ret
 
 def hamiltonian(size, EC, EJ, EL, flux):
     hbar_w0 = sqrt( 8. * EL * EC )
