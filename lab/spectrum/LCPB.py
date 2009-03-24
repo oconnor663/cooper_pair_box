@@ -11,29 +11,31 @@ from scipy.special import genlaguerre, poly1d
 #### addition to a size
 #### 
 
-def ineff_test( phi0, size ):
-    ret = [ [genlaguerre(i,j)(phi0**2/2) for j in range(size)]
+def ineff_test( arg, size ):
+    ret = [ [genlaguerre(i,j)(arg) for j in range(size)]
             for i in range(size) ]
     return ret
 
-def genlaguerre_array( phi0, size ):
-    arg = phi0**2/2
-
+def genlaguerre_array( arg, size ):
     ret = [ [ 0 for a in range(size) ] for n in range(size) ]
     for a in range(size):
         ret[0][a] = genlaguerre(0,a)
         ret[1][a] = genlaguerre(1,a)
+        print "a"
         for n in range(2,size):
             ret[n][a] = ((2*(n-1)+a+1-poly1d([1,0]))*ret[n-1][a] - \
                              (n-1+a)*ret[n-2][a] ) /n
+        print "b"
         for n in range(size):
             ret[n][a] = ret[n][a](arg)
     return ret
 
-def hamiltonian(size, EC, EJ, EL, flux):
+def hamiltonian(size, EC, EJ, EL, flux, genlags):
     hbar_w0 = sqrt( 8. * EL * EC )
     phi0 = ( 8. * EC / EL ) ** .25 
     flux0 = 1
+
+    genlags = genlaguerre_array( phi0**2/2, size )
 
     a = array([[0. for i in xrange(size)] for i in xrange(size)])
     for row in xrange(size):
@@ -49,7 +51,7 @@ def hamiltonian(size, EC, EJ, EL, flux):
                     -EJ * cos(2*pi*flux/flux0) * (-2)**-m \
                     * sqrt(factorial(n)/factorial(n+2*m)) \
                     * phi0**(2*m) * exp(phi0**2/-4) \
-                    * genlaguerre(n,2*m)(phi0**2/2)
+                    * genlags[n][2*m]
             #the nonzero sine elements
             else:
                 ### IS THIS PART RIGHT?
@@ -59,7 +61,7 @@ def hamiltonian(size, EC, EJ, EL, flux):
                     -EJ * sin(2*pi*flux/flux0) * (-2)**(-m) * 2**-.5 \
                     * sqrt(factorial(n)/factorial(n+2*m+1)) \
                     * phi0**(2*m+1) * exp(phi0**2/-4) \
-                    * genlaguerre(n,2*m+1)(phi0**2/2) ## Check overall signs
+                    * genlags[n][2*m+1] ## Check overall signs
             
     return a
 
