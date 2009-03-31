@@ -4,17 +4,7 @@ import sys,os
 from scipy import array, sqrt, exp, pi, factorial, cos, sin
 from scipy.linalg import eig
 from scipy.special import genlaguerre, poly1d
-
-####
-#### Create a function that gives an array of genlaguerres.
-#### it will need EL and EC as parameters (for phi0), in
-#### addition to a size
-#### 
-
-def ineff_test( arg, size ):
-    ret = [ [genlaguerre(i,j)(arg) for j in range(size)]
-            for i in range(size) ]
-    return ret
+from scipy.optimize import *
 
 def genlaguerre_array( arg, size ):
     ret = [ [ 0 for a in range(size) ] for n in range(size) ]
@@ -70,32 +60,70 @@ def sorted_eig( array ): ### real values only...
     ret.sort(cmp=cmp)
     return ret
 
-def main():
+def plot_curves( xpoints, ycurves ): # ycurves is a nested list
+    picname = os.popen( "mktemp", "r" ).read()[:-1]
+    grapher = os.popen( "gnuplot", "w" )
+    grapher.write( "set key off\n" )
+    grapher.write( "set terminal png\nset output '%s'\n" % picname )
+    grapher.write( "plot '-' w l" )
+    for i in ycurves[1:]:
+        grapher.write( ", '-' w l" )
+    grapher.write('\n' )
+    for curve in ycurves:
+        for i,y in enumerate(curve):
+            grapher.write( "%f %f\n" % (xpoints[i],y) )
+        grapher.write('e\n')
+    grapher.close()
 
-    EC = 1
-    EJ = 1
-    EL = 1
+    os.system( "display %s" % picname )
 
-    matrix_size = 20
-    num_levels = 5
-
+def make_curves( fluxes, EC, EJ, EL, num_curves=5, matrix_size=20 ):
     phi0 = ( 8. * EC / EL ) ** .25 
     genlags = genlaguerre_array( phi0**2/2, matrix_size )
     
-    outs = []
-    for i in range(5):
-        outs.append( open("data%i"%(i+1), "w") )
-
-    for f in range(100):
-        flux = f/50. - 1
-        print "point %i" % f
+    ycurves = [ [ 0 for f in fluxes ] for j in range(num_curves) ]
+    for i,flux in enumerate(fluxes):
         A = hamiltonian(matrix_size,EC,EJ,EL,flux,genlags)
         e = sorted_eig(A)
-        for i in range(5):
-            outs[i].write( "%f %f\n" % (flux,e[i][0]) )
+        for j in range(num_curves):
+            ycurves[j][i] = e[j+1][0]-e[0][0]
 
-    for i in outs:
-        i.close()
+    return ycurves
+
+def quad_diff( points, ycurves ):
+    ### ASSUMES both generated over the same fluxes
+    sum = 0
+    for i,x in enumerate(points):
+        sum += min( [ (curve[i]-x)**2 for curve in ycurves ] )
+    return sum
+
+calls = 0
+
+def optimizer( EC_EJ_EL_tup, fluxes, points ):
+    global calls
+    EC, EJ, EL = EC_EJ_EL_tup 
+    calls += 1
+    print "Optimizer called #%i on\n\t%20f\n\t%20f\n\t%20f" % (calls, EC, EJ, EL)
+    ycurves = make_curves( fluxes, EC, EJ, EL )
+    #plot_curves(fluxes,ycurves)
+    return quad_diff( points, ycurves )
+
+def main():
+    EC = 2.5
+    EJ = 8.8
+    EL = 0.5
+    
+    num_points = 50
+    fluxes = [ i*1./num_points - .5 for i in range(num_points) ]
+
+    ycurves = make_curves( fluxes, EC, EJ, EL )
+    
+    plot_curves( fluxes, ycurves )
+
+#    print fmin_l_bfgs_b( optimizer, [10,10,10], None, (fluxes,ycurves[0]),
+#                         True, ((0,20),(0,20),(0,20)))
+
+
 
 if __name__=='__main__':
     main()
