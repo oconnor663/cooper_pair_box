@@ -21,11 +21,9 @@ def genlaguerre_array( arg, size ):
     for a in range(size):
         ret[0][a] = genlaguerre(0,a)
         ret[1][a] = genlaguerre(1,a)
-        print "a"
         for n in range(2,size):
             ret[n][a] = ((2*(n-1)+a+1-poly1d([1,0]))*ret[n-1][a] - \
                              (n-1+a)*ret[n-2][a] ) /n
-        print "b"
         for n in range(size):
             ret[n][a] = ret[n][a](arg)
     return ret
@@ -34,8 +32,6 @@ def hamiltonian(size, EC, EJ, EL, flux, genlags):
     hbar_w0 = sqrt( 8. * EL * EC )
     phi0 = ( 8. * EC / EL ) ** .25 
     flux0 = 1
-
-    genlags = genlaguerre_array( phi0**2/2, size )
 
     a = array([[0. for i in xrange(size)] for i in xrange(size)])
     for row in xrange(size):
@@ -79,19 +75,27 @@ def main():
     EC = 1
     EJ = 1
     EL = 1
-    FLUX = .25
 
-    matrix_size = 50
+    matrix_size = 20
     num_levels = 5
+
+    phi0 = ( 8. * EC / EL ) ** .25 
+    genlags = genlaguerre_array( phi0**2/2, matrix_size )
     
-    print "Populating Matrix..."
-    A = hamiltonian(matrix_size,EC,EJ,EL,FLUX)
-    print "Diagonalizing..."
-    print A
-    e = sorted_eig(A)
-    print "\nEnergies:"
-    for i in e[:num_levels]: print i[0]
-    
+    outs = []
+    for i in range(5):
+        outs.append( open("data%i"%(i+1), "w") )
+
+    for f in range(100):
+        flux = f/50. - 1
+        print "point %i" % f
+        A = hamiltonian(matrix_size,EC,EJ,EL,flux,genlags)
+        e = sorted_eig(A)
+        for i in range(5):
+            outs[i].write( "%f %f\n" % (flux,e[i][0]) )
+
+    for i in outs:
+        i.close()
 
 if __name__=='__main__':
     main()
