@@ -5,6 +5,7 @@ from scipy import array, sqrt, exp, pi, factorial, cos, sin
 from scipy.linalg import eig
 from scipy.special import genlaguerre, poly1d
 from scipy.optimize import *
+from random import random
 
 def genlaguerre_array( arg, size ):
     ret = [ [ 0 for a in range(size) ] for n in range(size) ]
@@ -61,17 +62,19 @@ def sorted_eig( array ): ### real values only...
     return ret
 
 def plot_curves( xpoints, ycurves ): # ycurves is a nested list
+    # at the moment, ycurves contains sorted lists of each yval
+    # at a given flux (i.e. not lists representing continuous curves)
     picname = os.popen( "mktemp", "r" ).read()[:-1]
     grapher = os.popen( "gnuplot", "w" )
     grapher.write( "set key off\n" )
     grapher.write( "set terminal png\nset output '%s'\n" % picname )
     grapher.write( "plot '-' w l" )
-    for i in ycurves[1:]:
+    for i in range(len(ycurves[0])-1):
         grapher.write( ", '-' w l" )
     grapher.write('\n' )
-    for curve in ycurves:
-        for i,y in enumerate(curve):
-            grapher.write( "%f %f\n" % (xpoints[i],y) )
+    for curve in range(len(ycurves[0])):
+        for i,x in enumerate(xpoints):
+            grapher.write( "%f %f\n" % (x,ycurves[i][curve]) )
         grapher.write('e\n')
     grapher.close()
 
@@ -81,47 +84,69 @@ def make_curves( fluxes, EC, EJ, EL, num_curves=5, matrix_size=20 ):
     phi0 = ( 8. * EC / EL ) ** .25 
     genlags = genlaguerre_array( phi0**2/2, matrix_size )
     
-    ycurves = [ [ 0 for f in fluxes ] for j in range(num_curves) ]
+    ycurves = [ [ 0 for j in range(num_curves) ] for f in fluxes ]
     for i,flux in enumerate(fluxes):
         A = hamiltonian(matrix_size,EC,EJ,EL,flux,genlags)
         e = sorted_eig(A)
         for j in range(num_curves):
-            ycurves[j][i] = e[j+1][0]-e[0][0]
+            ycurves[i][j] = e[j+1][0]-e[0][0]
 
     return ycurves
 
-def quad_diff( points, ycurves ):
+def quad_diff( points, curves ):
     ### ASSUMES both generated over the same fluxes
+    if len(points)!=len(curves):
+        raise RuntimeError, "Something went wrong."
+    
     sum = 0
-    for i,x in enumerate(points):
-        sum += min( [ (curve[i]-x)**2 for curve in ycurves ] )
+    for i,yvals in enumerate(points):
+        for data in yvals:
+            sum += min( (data-theory)**2 for theory in curves[i] )
     return sum
 
-calls = 0
 
+calls = 0
 def optimizer( EC_EJ_EL_tup, fluxes, points ):
     global calls
     EC, EJ, EL = EC_EJ_EL_tup 
     calls += 1
-    print "Optimizer called #%i on\n\t%20f\n\t%20f\n\t%20f" % (calls, EC, EJ, EL)
-    ycurves = make_curves( fluxes, EC, EJ, EL )
-    #plot_curves(fluxes,ycurves)
-    return quad_diff( points, ycurves )
+    curves = make_curves( fluxes, EC, EJ, EL )
+    #plot_curves(fluxes,curves)
+    ret = quad_diff( points, curves )
+    print "Optimizer called #%i (val: %f)\n\t%.20f\n\t%.20f\n\t%.20f" \
+         % (calls, ret, EC, EJ, EL)
+    return ret
 
 def main():
+
     EC = 2.5
     EJ = 8.8
     EL = 0.5
     
-    num_points = 50
+    def guess_range(EC, EJ, EL):
+        EC *= (.8+.4*random())
+        EJ *= (.8+.4*random())
+        EL *= (.8+.4*random())
+        factor = 2  # This had better be greater than 1.2 b/c of preceding
+        factor = float(factor)
+        return ((EC/factor,factor*EC),
+                (EJ/factor, factor*EJ),
+                (EL/factor, factor*EL))
+
+    num_points = 10
     fluxes = [ i*1./num_points - .5 for i in range(num_points) ]
 
-    ycurves = make_curves( fluxes, EC, EJ, EL )
+    curves = make_curves( fluxes, EC, EJ, EL )
     
-    plot_curves( fluxes, ycurves )
+    #plot_curves( fluxes, curves )
 
-#    print fmin_l_bfgs_b( optimizer, [10,10,10], None, (fluxes,ycurves[0]),
-#                         True, ((0,20),(0,20),(0,20)))
+    ranges = guess_range(EC,EJ,EL)
+    print "Guess ranges:"
+    for i in ranges: print i
+    print "\n----------------------\n"
+
+    print fmin_l_bfgs_b( optimizer, [0,0,0], None, (fluxes,curves),
+                         True, ranges, factr=1e15)
 
 
 
