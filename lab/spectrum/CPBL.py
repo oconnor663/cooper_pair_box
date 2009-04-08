@@ -47,12 +47,12 @@ def prehamiltonian( genlags, EC, EJ, EL ):
                     * sqrt(factorial(n)/factorial(n+2*m+1)) \
                     * phi0**(2*m+1) * exp(phi0**2/-4) \
                     * genlags[n][2*m+1] ## Check overall signs
-    return array(ret)
+    return (array(ret),EC,EJ,EL)
 
-def sorted_eig( array ): ### real values only...
+def sorted_eig( array, num ): ### real values only...
     vals, vecs = eig(array)
     vals = [ i.real for i in vals ]
-    ret = zip( vals, vecs.T )
+    ret = zip( vals, vecs.T )[:num]
     def cmp( a, b ):
         return 0 if a[0]==b[0] else -1 if a[0]<b[0] else 1
     ret.sort(cmp=cmp)
@@ -60,36 +60,39 @@ def sorted_eig( array ): ### real values only...
 
 def opC( vec, EC, EL ):
     size = len(vec)
-    ret = array([0 for i in vec])
+    ret = array([0. for i in vec])
     for i,a in enumerate(vec):
         if i>1:
             ret[i-2] += sqrt(i)*sqrt(i-1)*a
         if i<size-2:
             ret[i+2] += sqrt(i+1)*sqrt(i+2)*a
         ret[i] += -(2*i+1)*a
-    ret *= -sqrt(EL/(2*EC))
+    ret *= -sqrt(EL/(2.*EC))
     return ret
 
 def opL( vec, EC, EL ):
     size = len(vec)
-    ret = array([0 for i in vec])
+    ret = array([0. for i in vec])
     for i,a in enumerate(vec):
         if i>1:
             ret[i-2] += sqrt(i)*sqrt(i-1)*a
         if i<size-2:
             ret[i+2] += sqrt(i+1)*sqrt(i+2)*a
         ret[i] += (2*i+1)*a #here
-    ret *= sqrt(EC/(2*EL)) #here
+    ret *= sqrt(EC/(2.*EL)) #here
     return ret
 
-def solve_energies( preham, EC, EJ, EL, flux ):
+def solve_energies( preham, flux, num ):
     '''Returns the energies and their derivatives for a single flux
     point, as a nested tuple'''
 
+    EC,EJ,EL = preham[1:]
+
     flux0 = 1
     hbar_w0 = sqrt( 8. * EL * EC )
-    size = len(preham)
-    cosham = preham.copy()
+    size = len(preham[0])
+    if num>len(preham[0]): raise RuntimeError, "mistake"
+    cosham = preham[0].copy()
     for row in range(size):
         for col in range(size):
             if (col-row)%2==0:
@@ -105,7 +108,7 @@ def solve_energies( preham, EC, EJ, EL, flux ):
                 H[row][col] *= EJ
             if row==col:
                 H[row][col] += hbar_w0 * (row+0.5)
-    system = sorted_eig(H)
+    system = sorted_eig(H,num)
     ret = []
     for level in system:
         dEC = dot( level[1], opC(level[1],EC,EL) )
@@ -189,14 +192,14 @@ def main():
     EJ = 8.8
     EL = 0.5
     
-    MATRIX_SIZE = 5
+    MATRIX_SIZE = 20
     NUM_POINTS = 10
 
     genlags = genlaguerre_array( MATRIX_SIZE )
 
     flux = 0
     p = prehamiltonian(genlags,EC,EJ,EL)
-    for i in solve_energies(p,EC,EJ,EL,flux):
+    for i in solve_energies(p,EC,EJ,EL,flux,5):
         print i
 
 
