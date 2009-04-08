@@ -7,7 +7,7 @@ from scipy.special import genlaguerre, poly1d
 from scipy.optimize import *
 from random import random
 
-def genlaguerre_array( arg, size ):
+def genlaguerre_array( size ):
     ret = [ [ 0 for a in range(size) ] for n in range(size) ]
     for a in range(size):
         ret[0][a] = genlaguerre(0,a)
@@ -15,27 +15,26 @@ def genlaguerre_array( arg, size ):
         for n in range(2,size):
             ret[n][a] = ((2*(n-1)+a+1-poly1d([1,0]))*ret[n-1][a] - \
                              (n-1+a)*ret[n-2][a] ) /n
-        for n in range(size):
-            ret[n][a] = ret[n][a](arg)
     return ret
 
-def hamiltonian(size, EC, EJ, EL, flux, genlags):
+def prehamiltonian( genlags, EC, EJ, EL ):
+    ### NB: omits a factor of EJ (on top of the flux dependency and the 
+    ### diagonal terms) for use as a derivative later
+    size = len(genlags)
     hbar_w0 = sqrt( 8. * EL * EC )
     phi0 = ( 8. * EC / EL ) ** .25 
-    flux0 = 1
+    arg = phi0**2/2
+    
+    genlags = [[ f(arg) for f in row ] for row in genlags]
+    ret = [ range(size) for i in range(size) ] #values set below
 
-    a = array([[0. for i in xrange(size)] for i in xrange(size)])
-    for row in xrange(size):
-        for col in xrange(size):
-            # initialize diagonal elements
-            if row==col:
-                a[row][col] += hbar_w0 * (row+0.5)
+    for row in range(size):
+        for col in range(size):
             #the nonzero cosine elements
             if (col-row)%2==0:
                 n = min(row,col)
                 m = abs(col-row)/2 # because of Hermitianness
-                a[row][col] += \
-                    -EJ * cos(2*pi*flux/flux0) * (-2)**-m \
+                ret[row][col] = -(-2)**-m \
                     * sqrt(factorial(n)/factorial(n+2*m)) \
                     * phi0**(2*m) * exp(phi0**2/-4) \
                     * genlags[n][2*m]
@@ -44,13 +43,34 @@ def hamiltonian(size, EC, EJ, EL, flux, genlags):
                 ### IS THIS PART RIGHT?
                 n = min(row,col)
                 m = (abs(col-row)-1)/2
-                a[row][col] += \
-                    -EJ * sin(2*pi*flux/flux0) * (-2)**(-m) * 2**-.5 \
+                ret[row][col] = -(-2)**(-m) * 2**-.5 \
                     * sqrt(factorial(n)/factorial(n+2*m+1)) \
                     * phi0**(2*m+1) * exp(phi0**2/-4) \
                     * genlags[n][2*m+1] ## Check overall signs
-            
-    return a
+    return array(ret)
+
+def hamiltonian(preham, EC, EJ, EL, flux):
+    hbar_w0 = sqrt( 8. * EL * EC )
+    flux0 = 1
+    size = len(preham)
+
+    ret = preham.copy()
+    for row in range(size):
+        for col in range(size):
+            #the nonzero cosine elements
+            if (col-row)%2==0:
+                n = min(row,col)
+                m = abs(col-row)/2 # because of Hermitianness
+                ret[row][col] *= EJ * cos(2*pi*flux/flux0)
+            #the nonzero sine elements
+            else:
+                n = min(row,col)
+                m = (abs(col-row)-1)/2
+                ret[row][col] *= EJ * sin(2*pi*flux/flux0)
+            # supplement diagonal elements
+            if row==col:
+                ret[row][col] += hbar_w0 * (row+0.5)            
+    return ret
 
 def sorted_eig( array ): ### real values only...
     vals, vecs = eig(array)
@@ -80,13 +100,11 @@ def plot_curves( xpoints, ycurves ): # ycurves is a nested list
 
     os.system( "display %s" % picname )
 
-def make_curves( fluxes, EC, EJ, EL, num_curves=5, matrix_size=20 ):
-    phi0 = ( 8. * EC / EL ) ** .25 
-    genlags = genlaguerre_array( phi0**2/2, matrix_size )
-    
+def make_curves( genlags, fluxes, EC, EJ, EL, num_curves=5 ):
+    preham = prehamiltonian( genlags, EC, EJ, EL )
     ycurves = [ [ 0 for j in range(num_curves) ] for f in fluxes ]
     for i,flux in enumerate(fluxes):
-        A = hamiltonian(matrix_size,EC,EJ,EL,flux,genlags)
+        A = hamiltonian(preham,EC,EJ,EL,flux)
         e = sorted_eig(A)
         for j in range(num_curves):
             ycurves[i][j] = e[j+1][0]-e[0][0]
@@ -106,15 +124,29 @@ def quad_diff( points, curves ):
 
 
 calls = 0
-def optimizer( EC_EJ_EL_tup, fluxes, points ):
+def optimizer( EC_EJ_EL_tup, fluxes, points, genlags ):
     global calls
     EC, EJ, EL = EC_EJ_EL_tup 
     calls += 1
-    curves = make_curves( fluxes, EC, EJ, EL )
+    curves = make_curves( genlags, fluxes, EC, EJ, EL )
     #plot_curves(fluxes,curves)
     ret = quad_diff( points, curves )
     print "Optimizer called #%i (val: %f)\n\t%.20f\n\t%.20f\n\t%.20f" \
          % (calls, ret, EC, EJ, EL)
+    return ret
+
+def guess_range(EC, EJ, EL):
+    EC *= (.9+.2*random())
+    EJ *= (.9+.2*random())
+    EL *= (.9+.2*random())
+    factor = 1.2  # This better be greater than SOMETHING b/c of preceding
+    factor = float(factor)
+    ret = ((EC/factor,factor*EC), 
+           (EJ/factor, factor*EJ),
+           (EL/factor, factor*EL))
+    print "Guess ranges:"
+    for i in ret: print i
+    print "\n----------------------\n"
     return ret
 
 def main():
@@ -123,33 +155,21 @@ def main():
     EJ = 8.8
     EL = 0.5
     
-    phi0 = (8. * EC / EL)**.25
-    print hamiltonian( 5, EC, EJ, EL, 0, genlaguerre_array(phi0**2/2,5) )
+    MATRIX_SIZE = 20
+    NUM_POINTS = 10
+
+    genlags = genlaguerre_array( MATRIX_SIZE )
+
+    fluxes = [ i*1./NUM_POINTS - .5 for i in range(NUM_POINTS) ]
+
+    curves = make_curves( genlags, fluxes, EC, EJ, EL )
     
-#     def guess_range(EC, EJ, EL):
-#         EC *= (.9+.2*random())
-#         EJ *= (.9+.2*random())
-#         EL *= (.9+.2*random())
-#         factor = 1.2  # This better be greater than SOMETHING b/c of preceding
-#         factor = float(factor)
-#         return ((EC/factor,factor*EC),
-#                 (EJ/factor, factor*EJ),
-#                 (EL/factor, factor*EL))
+    #plot_curves( fluxes, curves )
 
-#     num_points = 30
-#     fluxes = [ i*1./num_points - .5 for i in range(num_points) ]
+    ranges = guess_range(EC,EJ,EL)
 
-#     curves = make_curves( fluxes, EC, EJ, EL )
-    
-#     #plot_curves( fluxes, curves )
-
-#     ranges = guess_range(EC,EJ,EL)
-#     print "Guess ranges:"
-#     for i in ranges: print i
-#     print "\n----------------------\n"
-
-#     print fmin_l_bfgs_b( optimizer, [0,0,0], None, (fluxes,curves),
-#                          True, ranges, factr=1e15)
+    print fmin_l_bfgs_b( optimizer, (0,0,0), None, (fluxes,curves,genlags),
+                         True, ranges, factr=1e15)
 
 
 
