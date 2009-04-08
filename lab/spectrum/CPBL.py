@@ -49,25 +49,29 @@ def prehamiltonian( genlags, EC, EJ, EL ):
                     * genlags[n][2*m+1] ## Check overall signs
     return array(ret)
 
-def hamiltonian(preham, EC, EJ, EL, flux):
-    hbar_w0 = sqrt( 8. * EL * EC )
+def coshamiltonian( preham, flux ):
     flux0 = 1
     size = len(preham)
-
     ret = preham.copy()
     for row in range(size):
         for col in range(size):
-            #the nonzero cosine elements
             if (col-row)%2==0:
-                n = min(row,col)
-                m = abs(col-row)/2 # because of Hermitianness
-                ret[row][col] *= EJ * cos(2*pi*flux/flux0)
-            #the nonzero sine elements
+                ret[row][col] *= cos(2*pi*flux/flux0)
             else:
-                n = min(row,col)
-                m = (abs(col-row)-1)/2
-                ret[row][col] *= EJ * sin(2*pi*flux/flux0)
-            # supplement diagonal elements
+                ret[row][col] *= sin(2*pi*flux/flux0)
+    return ret
+
+def hamiltonian(cosham, EC, EJ, EL):
+    hbar_w0 = sqrt( 8. * EL * EC )
+    size = len(cosham)
+
+    ret = cosham.copy()
+    for row in range(size):
+        for col in range(size):
+            if (col-row)%2==0:
+                ret[row][col] *= EJ
+            else:
+                ret[row][col] *= EJ
             if row==col:
                 ret[row][col] += hbar_w0 * (row+0.5)            
     return ret
@@ -81,31 +85,13 @@ def sorted_eig( array ): ### real values only...
     ret.sort(cmp=cmp)
     return ret
 
-def plot_curves( xpoints, ycurves ): # ycurves is a nested list
-    # at the moment, ycurves contains sorted lists of each yval
-    # at a given flux (i.e. not lists representing continuous curves)
-    picname = os.popen( "mktemp", "r" ).read()[:-1]
-    grapher = os.popen( "gnuplot", "w" )
-    grapher.write( "set key off\n" )
-    grapher.write( "set terminal png\nset output '%s'\n" % picname )
-    grapher.write( "plot '-' w l" )
-    for i in range(len(ycurves[0])-1):
-        grapher.write( ", '-' w l" )
-    grapher.write('\n' )
-    for curve in range(len(ycurves[0])):
-        for i,x in enumerate(xpoints):
-            grapher.write( "%f %f\n" % (x,ycurves[i][curve]) )
-        grapher.write('e\n')
-    grapher.close()
-
-    os.system( "display %s" % picname )
-
 def make_curves( genlags, fluxes, EC, EJ, EL, num_curves=5 ):
     preham = prehamiltonian( genlags, EC, EJ, EL )
     ycurves = [ [ 0 for j in range(num_curves) ] for f in fluxes ]
     for i,flux in enumerate(fluxes):
-        A = hamiltonian(preham,EC,EJ,EL,flux)
-        e = sorted_eig(A)
+        cosham = coshamiltonian( preham, flux )
+        H = hamiltonian(cosham,EC,EJ,EL)
+        e = sorted_eig(H)
         for j in range(num_curves):
             ycurves[i][j] = e[j+1][0]-e[0][0]
 
@@ -135,6 +121,25 @@ def optimizer( EC_EJ_EL_tup, fluxes, points, genlags ):
          % (calls, ret, EC, EJ, EL)
     return ret
 
+def plot_curves( xpoints, ycurves ): # ycurves is a nested list
+    # at the moment, ycurves contains sorted lists of each yval
+    # at a given flux (i.e. not lists representing continuous curves)
+    picname = os.popen( "mktemp", "r" ).read()[:-1]
+    grapher = os.popen( "gnuplot", "w" )
+    grapher.write( "set key off\n" )
+    grapher.write( "set terminal png\nset output '%s'\n" % picname )
+    grapher.write( "plot '-' w l" )
+    for i in range(len(ycurves[0])-1):
+        grapher.write( ", '-' w l" )
+    grapher.write('\n' )
+    for curve in range(len(ycurves[0])):
+        for i,x in enumerate(xpoints):
+            grapher.write( "%f %f\n" % (x,ycurves[i][curve]) )
+        grapher.write('e\n')
+    grapher.close()
+
+    os.system( "display %s" % picname )
+
 def guess_range(EC, EJ, EL):
     EC *= (.9+.2*random())
     EJ *= (.9+.2*random())
@@ -155,10 +160,15 @@ def main():
     EJ = 8.8
     EL = 0.5
     
-    MATRIX_SIZE = 20
+    MATRIX_SIZE = 5
     NUM_POINTS = 10
 
     genlags = genlaguerre_array( MATRIX_SIZE )
+
+    p = prehamiltonian(genlags,EC,EJ,EL)
+    c = coshamiltonian(p,0)
+    h = hamiltonian(c,EC,EJ,EL)
+    print h
 
     fluxes = [ i*1./NUM_POINTS - .5 for i in range(NUM_POINTS) ]
 
