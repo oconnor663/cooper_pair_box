@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 import sys,os
-from scipy import array, sqrt, exp, pi, factorial, cos, sin
+from scipy import array, sqrt, exp, pi, factorial, cos, sin, dot
 from scipy.linalg import eig
 from scipy.special import genlaguerre, poly1d
 from scipy.optimize import *
@@ -49,33 +49,6 @@ def prehamiltonian( genlags, EC, EJ, EL ):
                     * genlags[n][2*m+1] ## Check overall signs
     return array(ret)
 
-def coshamiltonian( preham, flux ):
-    flux0 = 1
-    size = len(preham)
-    ret = preham.copy()
-    for row in range(size):
-        for col in range(size):
-            if (col-row)%2==0:
-                ret[row][col] *= cos(2*pi*flux/flux0)
-            else:
-                ret[row][col] *= sin(2*pi*flux/flux0)
-    return ret
-
-def hamiltonian(cosham, EC, EJ, EL):
-    hbar_w0 = sqrt( 8. * EL * EC )
-    size = len(cosham)
-
-    ret = cosham.copy()
-    for row in range(size):
-        for col in range(size):
-            if (col-row)%2==0:
-                ret[row][col] *= EJ
-            else:
-                ret[row][col] *= EJ
-            if row==col:
-                ret[row][col] += hbar_w0 * (row+0.5)            
-    return ret
-
 def sorted_eig( array ): ### real values only...
     vals, vecs = eig(array)
     vals = [ i.real for i in vals ]
@@ -83,6 +56,62 @@ def sorted_eig( array ): ### real values only...
     def cmp( a, b ):
         return 0 if a[0]==b[0] else -1 if a[0]<b[0] else 1
     ret.sort(cmp=cmp)
+    return ret
+
+def opC( vec, EC, EL ):
+    size = len(vec)
+    ret = array([0 for i in vec])
+    for i,a in enumerate(vec):
+        if i>1:
+            ret[i-2] += sqrt(i)*sqrt(i-1)*a
+        if i<size-2:
+            ret[i+2] += sqrt(i+1)*sqrt(i+2)*a
+        ret[i] += -(2*i+1)*a
+    ret *= -sqrt(EL/(2*EC))
+    return ret
+
+def opL( vec, EC, EL ):
+    size = len(vec)
+    ret = array([0 for i in vec])
+    for i,a in enumerate(vec):
+        if i>1:
+            ret[i-2] += sqrt(i)*sqrt(i-1)*a
+        if i<size-2:
+            ret[i+2] += sqrt(i+1)*sqrt(i+2)*a
+        ret[i] += (2*i+1)*a #here
+    ret *= sqrt(EC/(2*EL)) #here
+    return ret
+
+def solve_energies( preham, EC, EJ, EL, flux ):
+    '''Returns the energies and their derivatives for a single flux
+    point, as a nested tuple'''
+
+    flux0 = 1
+    hbar_w0 = sqrt( 8. * EL * EC )
+    size = len(preham)
+    cosham = preham.copy()
+    for row in range(size):
+        for col in range(size):
+            if (col-row)%2==0:
+                cosham[row][col] *= cos(2*pi*flux/flux0)
+            else:
+                cosham[row][col] *= sin(2*pi*flux/flux0)
+    H = cosham.copy()
+    for row in range(size):
+        for col in range(size):
+            if (col-row)%2==0:
+                H[row][col] *= EJ
+            else:
+                H[row][col] *= EJ
+            if row==col:
+                H[row][col] += hbar_w0 * (row+0.5)
+    system = sorted_eig(H)
+    ret = []
+    for level in system:
+        dEC = dot( level[1], opC(level[1],EC,EL) )
+        dEL = dot( level[1], opL(level[1],EC,EL) )
+        dEJ = dot( level[1], dot(cosham,level[1]) )
+        ret.append( [level[0], dEC, dEJ, dEL] )
     return ret
 
 def make_curves( genlags, fluxes, EC, EJ, EL, num_curves=5 ):
@@ -165,21 +194,22 @@ def main():
 
     genlags = genlaguerre_array( MATRIX_SIZE )
 
+    flux = 0
     p = prehamiltonian(genlags,EC,EJ,EL)
-    c = coshamiltonian(p,0)
-    h = hamiltonian(c,EC,EJ,EL)
-    print h
+    for i in solve_energies(p,EC,EJ,EL,flux):
+        print i
 
-    fluxes = [ i*1./NUM_POINTS - .5 for i in range(NUM_POINTS) ]
 
-    curves = make_curves( genlags, fluxes, EC, EJ, EL )
+#     fluxes = [ i*1./NUM_POINTS - .5 for i in range(NUM_POINTS) ]
+
+#     curves = make_curves( genlags, fluxes, EC, EJ, EL )
     
-    #plot_curves( fluxes, curves )
+#     #plot_curves( fluxes, curves )
 
-    ranges = guess_range(EC,EJ,EL)
+#     ranges = guess_range(EC,EJ,EL)
 
-    print fmin_l_bfgs_b( optimizer, (0,0,0), None, (fluxes,curves,genlags),
-                         True, ranges, factr=1e15)
+#     print fmin_l_bfgs_b( optimizer, (0,0,0), None, (fluxes,curves,genlags),
+#                          True, ranges)
 
 
 
