@@ -7,8 +7,11 @@ from scipy.special import genlaguerre, poly1d
 from scipy.optimize import *
 from random import random
 
-def genlaguerre_array( arg, size ):
+def make_negcos( EC, EJ, EL, size ):
+    phi0 = ( 8. * EC / EL ) ** .25 
+    
     ret = [ [ 0 for a in range(size) ] for n in range(size) ]
+    # calc the polynomials
     for a in range(size):
         ret[0][a] = genlaguerre(0,a)
         ret[1][a] = genlaguerre(1,a)
@@ -16,41 +19,41 @@ def genlaguerre_array( arg, size ):
             ret[n][a] = ((2*(n-1)+a+1-poly1d([1,0]))*ret[n-1][a] - \
                              (n-1+a)*ret[n-2][a] ) /n
         for n in range(size):
-            ret[n][a] = ret[n][a](arg)
-    return ret
+            ret[n][a] = ret[n][a](phi0**2/2)
 
-def hamiltonian(size, EC, EJ, EL, flux, genlags):
-    hbar_w0 = sqrt( 8. * EL * EC )
-    phi0 = ( 8. * EC / EL ) ** .25 
-    flux0 = 1
-
-    a = array([[0. for i in xrange(size)] for i in xrange(size)])
-    for row in xrange(size):
-        for col in xrange(size):
-            # initialize diagonal elements
-            if row==col:
-                a[row][col] += hbar_w0 * (row+0.5)
+    # now multiply in the common coefficients
+    for row in range(size):
+        for col in range(size):
             #the nonzero cosine elements
             if (col-row)%2==0:
                 n = min(row,col)
                 m = abs(col-row)/2 # because of Hermitianness
-                a[row][col] += \
-                    -EJ * cos(2*pi*flux/flux0) * (-2)**-m \
-                    * sqrt(factorial(n)/factorial(n+2*m)) \
-                    * phi0**(2*m) * exp(phi0**2/-4) \
-                    * genlags[n][2*m]
+                ret[row][col] += -(-2)**-m * \
+                    sqrt(factorial(n)/factorial(n+2*m)) \
+                    * phi0**(2*m) * exp(phi0**2/-4)
             #the nonzero sine elements
             else:
-                ### IS THIS PART RIGHT?
                 n = min(row,col)
                 m = (abs(col-row)-1)/2
-                a[row][col] += \
-                    -EJ * sin(2*pi*flux/flux0) * (-2)**(-m) * 2**-.5 \
+                ret[row][col] += -(-2)**(-m) * 2**-.5 \
                     * sqrt(factorial(n)/factorial(n+2*m+1)) \
-                    * phi0**(2*m+1) * exp(phi0**2/-4) \
-                    * genlags[n][2*m+1] ## Check overall signs
-            
-    return a
+                    * phi0**(2*m+1) * exp(phi0**2/-4)
+    return array(ret)
+
+def hamiltonian(negcos, EC, EJ, EL, flux):
+    hbar_w0 = sqrt( 8. * EL * EC )
+    flux0 = 1
+    ret = negcos.copy()
+
+    for row in range(len(negcos)):
+        for col in range(len(negcos)):
+            if row==col:
+                ret[row][col] += hbar_w0 * (row+0.5)
+            if (col-row)%2==0:
+                ret[row][col] *= EJ*cos(2*pi*flux/flux0)
+            else:
+                ret[row][col] *= EJ*sin(2*pi*flux/flux0)                
+    return ret
 
 def sorted_eig( array ): ### real values only...
     vals, vecs = eig(array)
@@ -80,13 +83,10 @@ def plot_curves( xpoints, ycurves ): # ycurves is a nested list
 
     os.system( "display %s" % picname )
 
-def make_curves( fluxes, EC, EJ, EL, num_curves=5, matrix_size=20 ):
-    phi0 = ( 8. * EC / EL ) ** .25 
-    genlags = genlaguerre_array( phi0**2/2, matrix_size )
-    
+def make_curves( fluxes, EC, EJ, EL, negcos, num_curves=5 ):
     ycurves = [ [ 0 for j in range(num_curves) ] for f in fluxes ]
     for i,flux in enumerate(fluxes):
-        A = hamiltonian(matrix_size,EC,EJ,EL,flux,genlags)
+        A = hamiltonian(negcos,EC,EJ,EL,flux)
         e = sorted_eig(A)
         for j in range(num_curves):
             ycurves[i][j] = e[j+1][0]-e[0][0]
@@ -106,11 +106,11 @@ def quad_diff( points, curves ):
 
 
 calls = 0
-def optimizer( EC_EJ_EL_tup, fluxes, points ):
+def optimizer( EC_EJ_EL_tup, fluxes, points, negcos ):
     global calls
     EC, EJ, EL = EC_EJ_EL_tup 
     calls += 1
-    curves = make_curves( fluxes, EC, EJ, EL )
+    curves = make_curves( fluxes, EC, EJ, EL, negcos )
     #plot_curves(fluxes,curves)
     ret = quad_diff( points, curves )
     print "Optimizer called #%i (val: %f)\n\t%.20f\n\t%.20f\n\t%.20f" \
@@ -123,23 +123,26 @@ def main():
     EJ = 8.8
     EL = 0.5
     
-    phi0 = (8. * EC / EL)**.25
-    print hamiltonian( 5, EC, EJ, EL, 0, genlaguerre_array(phi0**2/2,5) )
-    
+    MATRIX_SIZE = 5  ######### CHANGE THIS BACK!!!
+    NUM_POINTS = 10
+
+    negcos = make_negcos( EC, EJ, EL, MATRIX_SIZE )
+
+    print hamiltonian( negcos, EC, EJ, EL, 0 )
+
 #     def guess_range(EC, EJ, EL):
 #         EC *= (.9+.2*random())
 #         EJ *= (.9+.2*random())
 #         EL *= (.9+.2*random())
-#         factor = 1.2  # This better be greater than SOMETHING b/c of preceding
+#         factor = 1.2  # This better be greater than the preceding
 #         factor = float(factor)
 #         return ((EC/factor,factor*EC),
 #                 (EJ/factor, factor*EJ),
 #                 (EL/factor, factor*EL))
 
-#     num_points = 30
-#     fluxes = [ i*1./num_points - .5 for i in range(num_points) ]
+#     fluxes = [ i*1./NUM_POINTS - .5 for i in range(NUM_POINTS) ]
 
-#     curves = make_curves( fluxes, EC, EJ, EL )
+#     curves = make_curves( fluxes, EC, EJ, EL, negcos )
     
 #     #plot_curves( fluxes, curves )
 
@@ -148,7 +151,7 @@ def main():
 #     for i in ranges: print i
 #     print "\n----------------------\n"
 
-#     print fmin_l_bfgs_b( optimizer, [0,0,0], None, (fluxes,curves),
+#     print fmin_l_bfgs_b( optimizer, [0,0,0], None, (fluxes,curves,negcos),
 #                          True, ranges, factr=1e15)
 
 
