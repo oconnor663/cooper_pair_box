@@ -129,11 +129,14 @@ def niceness( (EC,EJ,EL), genlags, fluxes, data, num_curves ):
 
     global queries
     queries += 1
+    print "Call #%i" %queries
     
     f = 0        # the sum of squares
     f_EC = 0     # and its partial derivatives
     f_EJ = 0
     f_EL = 0
+
+    num_points = 0
 
     P = prehamiltonian(genlags,EC,EJ,EL)
 
@@ -141,6 +144,7 @@ def niceness( (EC,EJ,EL), genlags, fluxes, data, num_curves ):
         E = solve_energies(P,EC,EJ,EL,flux, num_curves )
         
         for d in data[i]:
+            num_points += 1
             index = 0
             diffsq = (E[0][0] - d)**2
             # now find the energy it's closest to
@@ -159,6 +163,11 @@ def niceness( (EC,EJ,EL), genlags, fluxes, data, num_curves ):
     #print "Niceness queried (# %i): %f" \
         #"\n\t%.20f\n\t%.20f\n\t%.20f\n" % \
         #(queries,f,EC,EJ,EL)
+
+    f /= num_points
+    f_EC /= num_points
+    f_EJ /= num_points
+    f_EL /= num_points
 
     return (f, array((f_EC,f_EJ,f_EL)))
 
