@@ -160,9 +160,9 @@ def niceness( (EC,EJ,EL), genlags, fluxes, data, num_curves ):
             f_EJ += 2 * diff * E[index][2]
             f_EL += 2 * diff * E[index][3]
     
-    #print "Niceness queried (# %i): %f" \
-        #"\n\t%.20f\n\t%.20f\n\t%.20f\n" % \
-        #(queries,f,EC,EJ,EL)
+    print "Niceness queried (# %i): %f" \
+        "\n\t%.20f\n\t%.20f\n\t%.20f\n" % \
+        (queries,f,EC,EJ,EL)
 
     f /= num_points
     f_EC /= num_points
