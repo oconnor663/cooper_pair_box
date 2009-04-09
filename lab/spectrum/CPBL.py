@@ -1,7 +1,8 @@
 #! /usr/bin/python
 
 import sys,os
-from scipy import array, sqrt, exp, pi, factorial, cos, sin, dot
+from math import sqrt
+from scipy import array, exp, pi, factorial, cos, sin, dot
 from scipy.linalg import eig
 from scipy.special import genlaguerre, poly1d
 from scipy.optimize import *
@@ -47,52 +48,52 @@ def prehamiltonian( genlags, EC, EJ, EL ):
                     * sqrt(factorial(n)/factorial(n+2*m+1)) \
                     * phi0**(2*m+1) * exp(phi0**2/-4) \
                     * genlags[n][2*m+1] ## Check overall signs
-    return (array(ret),EC,EJ,EL)
+    return array(ret)
 
-def sorted_eig( array, num ): ### real values only...
+def sorted_eig( array ): ### real values only...
     vals, vecs = eig(array)
     vals = [ i.real for i in vals ]
-    ret = zip( vals, vecs.T )[:num]
+    ret = zip( vals, vecs.T )
     def cmp( a, b ):
         return 0 if a[0]==b[0] else -1 if a[0]<b[0] else 1
     ret.sort(cmp=cmp)
     return ret
 
-def opC( vec, EC, EL ):
+SQRTS = [sqrt(i) for i in range(20)]
+
+def opC( vec, negsqrtELo2EC ):
     size = len(vec)
     ret = array([0. for i in vec])
     for i,a in enumerate(vec):
         if i>1:
-            ret[i-2] += sqrt(i)*sqrt(i-1)*a
+            ret[i-2] += SQRTS[i]*SQRTS[i-1]*a
         if i<size-2:
-            ret[i+2] += sqrt(i+1)*sqrt(i+2)*a
+            ret[i+2] += SQRTS[i+1]*SQRTS[i+2]*a
         ret[i] += -(2*i+1)*a
-    ret *= -sqrt(EL/(2.*EC))
+    ret *= negsqrtELo2EC
     return ret
 
-def opL( vec, EC, EL ):
+def opL( vec, sqrtECo2EL ):
     size = len(vec)
     ret = array([0. for i in vec])
     for i,a in enumerate(vec):
         if i>1:
-            ret[i-2] += sqrt(i)*sqrt(i-1)*a
+            ret[i-2] += SQRTS[i]*SQRTS[i-1]*a
         if i<size-2:
-            ret[i+2] += sqrt(i+1)*sqrt(i+2)*a
+            ret[i+2] += SQRTS[i+1]*SQRTS[i+2]*a
         ret[i] += (2*i+1)*a #here
-    ret *= sqrt(EC/(2.*EL)) #here
+    ret *= sqrtECo2EL #here
     return ret
 
-def solve_energies( preham, flux, num ):
+def solve_energies( preham, EC, EJ, EL, flux, num ):
     '''Returns the energies and their derivatives for a single flux
-    point, as a nested tuple'''
-
-    EC,EJ,EL = preham[1:]
+    point, as a nested tuple. CALCULATES DIFFERENCE FROM GROUND.'''
 
     flux0 = 1
     hbar_w0 = sqrt( 8. * EL * EC )
-    size = len(preham[0])
-    if num>len(preham[0]): raise RuntimeError, "mistake"
-    cosham = preham[0].copy()
+    size = len(preham)
+    if num+1>len(preham): raise RuntimeError, "mistake"
+    cosham = preham.copy()
     for row in range(size):
         for col in range(size):
             if (col-row)%2==0:
@@ -108,50 +109,67 @@ def solve_energies( preham, flux, num ):
                 H[row][col] *= EJ
             if row==col:
                 H[row][col] += hbar_w0 * (row+0.5)
-    system = sorted_eig(H,num)
-    ret = []
+    system = sorted_eig(H)[:num+1]
+
+    results = []
+    negsqrtELo2EC = -sqrt(EL/(2.*EC))
+    sqrtECo2EL = sqrt(EC/(2.*EL))
     for level in system:
-        dEC = dot( level[1], opC(level[1],EC,EL) )
-        dEL = dot( level[1], opL(level[1],EC,EL) )
+        dEC = dot( level[1], opC(level[1],negsqrtELo2EC) )
+        dEL = dot( level[1], opL(level[1],sqrtECo2EL) )
         dEJ = dot( level[1], dot(cosham,level[1]) )
-        ret.append( [level[0], dEC, dEJ, dEL] )
-    return ret
+        results.append( array([level[0], dEC, dEJ, dEL]) )
+    return [ i-results[0] for i in results[1:] ]
 
-def make_curves( genlags, fluxes, EC, EJ, EL, num_curves=5 ):
-    preham = prehamiltonian( genlags, EC, EJ, EL )
-    ycurves = [ [ 0 for j in range(num_curves) ] for f in fluxes ]
-    for i,flux in enumerate(fluxes):
-        cosham = coshamiltonian( preham, flux )
-        H = hamiltonian(cosham,EC,EJ,EL)
-        e = sorted_eig(H)
-        for j in range(num_curves):
-            ycurves[i][j] = e[j+1][0]-e[0][0]
+queries = 0
+def niceness( (EC,EJ,EL), genlags, fluxes, data, num_curves ):
+    '''Returns the value of the difference of squares and the
+    vector of partials in a format compatible with the optimizer.
+    ( f, array(f_EC,f_EJ,f_EL) )'''
 
-    return ycurves
-
-def quad_diff( points, curves ):
-    ### ASSUMES both generated over the same fluxes
-    if len(points)!=len(curves):
-        raise RuntimeError, "Something went wrong."
+    global queries
+    queries += 1
     
-    sum = 0
-    for i,yvals in enumerate(points):
-        for data in yvals:
-            sum += min( (data-theory)**2 for theory in curves[i] )
-    return sum
+    f = 0        # the sum of squares
+    f_EC = 0     # and its partial derivatives
+    f_EJ = 0
+    f_EL = 0
 
+    P = prehamiltonian(genlags,EC,EJ,EL)
 
-calls = 0
-def optimizer( EC_EJ_EL_tup, fluxes, points, genlags ):
-    global calls
-    EC, EJ, EL = EC_EJ_EL_tup 
-    calls += 1
-    curves = make_curves( genlags, fluxes, EC, EJ, EL )
-    #plot_curves(fluxes,curves)
-    ret = quad_diff( points, curves )
-    print "Optimizer called #%i (val: %f)\n\t%.20f\n\t%.20f\n\t%.20f" \
-         % (calls, ret, EC, EJ, EL)
-    return ret
+    for i,flux in enumerate(fluxes):
+        E = solve_energies(P,EC,EJ,EL,flux, num_curves )
+        
+        for d in data[i]:
+            index = 0
+            diffsq = (E[0][0] - d)**2
+            # now find the energy it's closest to
+            for j in range(1,num_curves):
+                newdiff = (E[j][0] - d)**2
+                if newdiff < diffsq:
+                    diffsq = newdiff
+                    index = j
+            # now add the results to the running totals
+            diff = E[index][0] - d
+            f += diffsq
+            f_EC += 2 * diff * E[index][1]
+            f_EJ += 2 * diff * E[index][2]
+            f_EL += 2 * diff * E[index][3]
+    
+    #print "Niceness queried (# %i): %f" \
+        #"\n\t%.20f\n\t%.20f\n\t%.20f\n" % \
+        #(queries,f,EC,EJ,EL)
+
+    return (f, array((f_EC,f_EJ,f_EL)))
+
+def make_data( genlags, fluxes, EC, EJ, EL, num_curves ):
+    P = prehamiltonian( genlags, EC, EJ, EL )
+    data = [ [ 0 for j in range(num_curves) ] for f in fluxes ]
+    for i,flux in enumerate(fluxes):
+        E = solve_energies( P, EC, EJ, EL, flux, num_curves )
+        for j in range(num_curves):
+            data[i][j] = E[j][0]
+    return data
 
 def plot_curves( xpoints, ycurves ): # ycurves is a nested list
     # at the moment, ycurves contains sorted lists of each yval
@@ -172,49 +190,55 @@ def plot_curves( xpoints, ycurves ): # ycurves is a nested list
 
     os.system( "display %s" % picname )
 
-def guess_range(EC, EJ, EL):
-    EC *= (.9+.2*random())
-    EJ *= (.9+.2*random())
-    EL *= (.9+.2*random())
-    factor = 1.2  # This better be greater than SOMETHING b/c of preceding
-    factor = float(factor)
-    ret = ((EC/factor,factor*EC), 
-           (EJ/factor, factor*EJ),
-           (EL/factor, factor*EL))
-    print "Guess ranges:"
-    for i in ret: print i
-    print "\n----------------------\n"
+def guess_bounds(EC, EJ, EL):
+    ret = ((EC*random(), (1+random())*EC), 
+           (EJ*random(), (1+random())*EJ),
+           (EL*random(), (1+random())*EL))
     return ret
 
 def main():
 
-    EC = 2.5
-    EJ = 8.8
-    EL = 0.5
+    EC = 10*random() #2.5
+    EJ = 10*random() #8.8
+    EL = 10*random() #0.5
+
+    print "EC = %f\nEJ = %f\nEL = %f" % (EC,EJ,EL)
     
     MATRIX_SIZE = 20
-    NUM_POINTS = 10
+    NUM_ENERGIES = 5
+    NUM_POINTS = 30
 
     genlags = genlaguerre_array( MATRIX_SIZE )
+    fluxes = [ i*1./NUM_POINTS - .5 for i in range(NUM_POINTS) ]
 
-    flux = 0
-    p = prehamiltonian(genlags,EC,EJ,EL)
-    for i in solve_energies(p,EC,EJ,EL,flux,5):
-        print i
+    data = make_data( genlags,fluxes,EC,EJ,EL,NUM_ENERGIES )
 
+    #plot_curves( fluxes, data )
 
-#     fluxes = [ i*1./NUM_POINTS - .5 for i in range(NUM_POINTS) ]
+    bounds = guess_bounds(EC,EJ,EL)
+    guess = array( ( (bounds[0][0]+bounds[0][1])/2,
+                     (bounds[1][0]+bounds[1][1])/2,
+                     (bounds[2][0]+bounds[2][1])/2 ) )
 
-#     curves = make_curves( genlags, fluxes, EC, EJ, EL )
+    print "Guess ranges:"
+    for i in bounds: print " ",i
+    print "Initial guess:",guess
     
-#     #plot_curves( fluxes, curves )
+    ret = fmin_l_bfgs_b( niceness, guess,
+                         args = (genlags,fluxes,data,NUM_ENERGIES),
+                         bounds = bounds )
 
-#     ranges = guess_range(EC,EJ,EL)
+    print "\nNumber of calls:", queries # a global var
+    print "EC = %f\nEJ = %f\nEL = %f" % (ret[0][0],ret[0][1],ret[0][2])
 
-#     print fmin_l_bfgs_b( optimizer, (0,0,0), None, (fluxes,curves,genlags),
-#                          True, ranges)
-
+    if ret[1] > .01:
+        raise RuntimeError, "Failure to converge."
 
 
 if __name__=='__main__':
     main()
+
+
+#g = genlaguerre_array(20)
+#p = prehamiltonian( g, 2.5,8.8,0.5)
+#solve_energies(p,2.5,8.8,0.5,.3345,5)

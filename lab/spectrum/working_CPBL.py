@@ -123,43 +123,45 @@ def main():
     EJ = 8.8
     EL = 0.5
     
-    phi0 = (8. * EC / EL)**.25
-    flux = 0
-    H = hamiltonian( 5, EC, EJ, EL, flux, genlaguerre_array(phi0**2/2,5) )
-    e = sorted_eig(H)
-    print "For flux=%f\n" % flux
-    print "Hamiltonian:"
-    print H
-    print "\nEnergies:"
-    for i in [i[0] for i in e]:
-        print i
-    
-#     def guess_range(EC, EJ, EL):
-#         EC *= (.9+.2*random())
-#         EJ *= (.9+.2*random())
-#         EL *= (.9+.2*random())
-#         factor = 1.2  # This better be greater than SOMETHING b/c of preceding
-#         factor = float(factor)
-#         return ((EC/factor,factor*EC),
-#                 (EJ/factor, factor*EJ),
-#                 (EL/factor, factor*EL))
+    def guess_range(EC, EJ, EL):
+        EC *= (.9+.2*random())
+        EJ *= (.9+.2*random())
+        EL *= (.9+.2*random())
+        factor = 1.2  # This better be greater than SOMETHING b/c of preceding
+        factor = float(factor)
+        return ((EC/factor,factor*EC),
+                (EJ/factor, factor*EJ),
+                (EL/factor, factor*EL))
 
-    num_points = 30
+    num_points = 10
     fluxes = [ i*1./num_points - .5 for i in range(num_points) ]
 
     curves = make_curves( fluxes, EC, EJ, EL )
     
-#     plot_curves( fluxes, curves )
+    #plot_curves( fluxes, curves )
 
-#     ranges = guess_range(EC,EJ,EL)
-#     print "Guess ranges:"
-#     for i in ranges: print i
-#     print "\n----------------------\n"
+    ranges = guess_range(EC,EJ,EL)
+    print "Guess ranges:"
+    for i in ranges: print i
+    print "\n----------------------\n"
 
-#     print fmin_l_bfgs_b( optimizer, [0,0,0], None, (fluxes,curves),
-#                          True, ranges, factr=1e15)
+    print fmin_l_bfgs_b( optimizer, [0,0,0], None, (fluxes,curves),
+                         True, ranges, factr=1e15)
 
 
 
-if __name__=='__main__':
-    main()
+#if __name__=='__main__':
+#    main()
+
+EC = 2.5
+EJ = 8.8
+EL = 0.5
+
+phi0 = (8. * EC / EL)**.25
+flux = .3345
+H = hamiltonian( 20, EC, EJ, EL, flux, genlaguerre_array(phi0**2/2,20) )
+e = sorted_eig(H)[:5]
+print "\nEnergies:"
+for i in [i[0] for i in e]:
+    print i
+    
