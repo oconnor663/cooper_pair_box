@@ -129,7 +129,6 @@ def niceness( (EC,EJ,EL), genlags, fluxes, data, num_curves ):
 
     global queries
     queries += 1
-    print "Call #%i" %queries
     
     f = 0        # the sum of squares
     f_EC = 0     # and its partial derivatives
@@ -161,7 +160,7 @@ def niceness( (EC,EJ,EL), genlags, fluxes, data, num_curves ):
             f_EL += 2 * diff * E[index][3]
     
     print "Niceness queried (# %i): %f" \
-        "\n\t%.20f\n\t%.20f\n\t%.20f\n" % \
+        "\n\t%.20f\n\t%.20f\n\t%.20f" % \
         (queries,f,EC,EJ,EL)
 
     f /= num_points
@@ -234,10 +233,10 @@ def main():
     print "Initial guess:",guess
     
     ret = fmin_l_bfgs_b( niceness, guess,
+                         #approx_grad = True,
                          args = (genlags,fluxes,data,NUM_ENERGIES),
                          bounds = bounds )
 
-    print "\nNumber of calls:", queries # a global var
     print "EC = %f\nEJ = %f\nEL = %f" % (ret[0][0],ret[0][1],ret[0][2])
 
     if ret[1] > .01:
