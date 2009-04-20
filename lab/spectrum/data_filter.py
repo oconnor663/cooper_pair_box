@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-import sys,copy
+import sys,os
 from math import sqrt
 
 def outliers( col, tolerance ):
@@ -62,39 +62,26 @@ def streak( points, min_streak ):
 
 def main():
 
-    if len(sys.argv)>1:
-        TOLERANCE = float(sys.argv[1])
-    else:
-        TOLERANCE = 1.0
-
-    if len(sys.argv)>2:
-        MIN_NEIGHBORS = int(sys.argv[2])
-    else:
-        MIN_NEIGHBORS = 8
-
-    if len(sys.argv)>3:
-        MIN_STREAK = int(sys.argv[3])
-    else:
-        MIN_STREAK = 10
+    TOLERANCE = 1.5
+    MIN_NEIGHBORS = 6
+    MIN_STREAK = 6
 
     sys.stderr.write( "Parsing...\n" )
     
     raw_data = [ [float(i) for i in line.split()]
-                 for line in sys.stdin.readlines() ]
+                 for line in sys.stdin ]
     
-    # to rotate the plot
-#    data = [ [ j[i] for j in raw_data ]
-#             for i in range(len(raw_data[0])-1,-1,-1) ]
-    # new addition for CPBL
+    # rotate plot from matrix indexing to euclidean indexing
+    sys.stderr.write( "Rotating...\n" )
     data = [ [ j[i] for j in raw_data ]
              for i in range(len(raw_data[0])) ]
+    del raw_data
 
     ### Selecting only those points with value outside TOLERANCE
 
     sys.stderr.write( "Scanning...\n" )
     points = [ [0 for i in col] for col in data ]
     points_copy = [ [0 for i in col] for col in data ]
-    linenum = 0
     for i,col in enumerate(data):
         for j in outliers(col,TOLERANCE):
             points[i][j] = 1
@@ -108,12 +95,26 @@ def main():
     sys.stderr.write( "Streaking...\n" )
     streak(points_copy,MIN_STREAK)
 
-    ### Rerotate the image
+    MIN_FLUX = -1.282
+    MAX_FLUX = 0.224
+    MIN_E = 8.5818
+    MAX_E = 9.0548
+
+    DIFF_FLUX = MAX_FLUX - MIN_FLUX
+    DIFF_E = MAX_E - MIN_E
+
+    ### Print euclidean indexing
     sys.stderr.write( "Printing...\n" )
-    for i in range(len(points)):
-        for j in range(len(points[0])):
+    width = len(points)
+    height = len(points[0])
+    
+    for i in range(width):
+        #print flux
+        print MIN_FLUX + DIFF_FLUX * i / width
+        for j in range(height):
+            #print energy values
             if points[i][j]==1 or points_copy[i][j]==1:
-                print i,j
+                print MIN_E + DIFF_E * j / height
         print
 
 if __name__=="__main__":

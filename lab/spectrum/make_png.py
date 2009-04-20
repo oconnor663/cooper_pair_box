@@ -4,7 +4,8 @@ import os,sys
 
 def main():
     out = os.popen("gnuplot","w")
-    out.write( "set terminal png\n"
+    out.write( "set key off\n"
+               "set terminal png\n"
                "set output 'out.png'\n"
                "plot '-' with points lt 3 pt 0\n" )
     line = sys.stdin.readline()

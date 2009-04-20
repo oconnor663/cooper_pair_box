@@ -158,10 +158,14 @@ EJ = 8.8
 EL = 0.5
 
 phi0 = (8. * EC / EL)**.25
-flux = .3345
+flux = 0
 H = hamiltonian( 20, EC, EJ, EL, flux, genlaguerre_array(phi0**2/2,20) )
 e = sorted_eig(H)[:5]
-print "\nEnergies:"
-for i in [i[0] for i in e]:
+energies = [ i[0] for i in e ]
+print "Energies:"
+for i in energies:
     print i
-    
+print "\nDifferences:"
+for i in energies[1:]:
+    print i - energies[0]
+            
