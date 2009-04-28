@@ -66,10 +66,19 @@ def main():
     MIN_NEIGHBORS = 6
     MIN_STREAK = 6
 
+    if len(sys.argv)<4:
+        sys.stderr.write( "Provide data, range, outfile arguments.\n" )
+        return 1
+
+    datafile = open(sys.argv[1])
+    yrangefile = open(sys.argv[2])
+    outfile = open(sys.argv[3],'w')
+
     sys.stderr.write( "Parsing...\n" )
     
     raw_data = [ [float(i) for i in line.split()]
-                 for line in sys.stdin ]
+                 for line in datafile ]
+    freqencies = [ float(i)/1e9 for i in yrangefile ]
     
     # rotate plot from matrix indexing to euclidean indexing
     sys.stderr.write( "Rotating...\n" )
@@ -95,13 +104,9 @@ def main():
     sys.stderr.write( "Streaking...\n" )
     streak(points_copy,MIN_STREAK)
 
-    MIN_FLUX = -1.282
-    MAX_FLUX = 0.224
-    MIN_E = 8.5818
-    MAX_E = 9.0548
-
+    MIN_FLUX = -0.6414
+    MAX_FLUX = 0.1151
     DIFF_FLUX = MAX_FLUX - MIN_FLUX
-    DIFF_E = MAX_E - MIN_E
 
     ### Print euclidean indexing
     sys.stderr.write( "Printing...\n" )
@@ -110,12 +115,12 @@ def main():
     
     for i in range(width):
         #print flux
-        print MIN_FLUX + DIFF_FLUX * i / width
+        outfile.write( "%f\n" % (MIN_FLUX + DIFF_FLUX * i / width) )
         for j in range(height):
-            #print energy values
+            #print energy (frequency) values
             if points[i][j]==1 or points_copy[i][j]==1:
-                print MIN_E + DIFF_E * j / height
-        print
+                outfile.write( "%f\n" % freqencies[j] )
+        outfile.write("\n")
 
 if __name__=="__main__":
     main()

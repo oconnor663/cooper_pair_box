@@ -179,7 +179,7 @@ def make_data( genlags, fluxes, EC, EJ, EL, num_curves ):
             data[i][j] = E[j][0]
     return data
 
-def plot_curves( xpoints, ycurves, bg=False ): # ycurves is a nested list
+def plot_curves( xpoints, ycurves ): # ycurves is a nested list
     # at the moment, ycurves contains sorted lists of each yval
     # at a given flux (i.e. not lists representing continuous curves)
     picname = os.popen( "mktemp", "r" ).read()[:-1]
@@ -195,106 +195,53 @@ def plot_curves( xpoints, ycurves, bg=False ): # ycurves is a nested list
             grapher.write( "%f %f\n" % (x,ycurves[i][curve]) )
         grapher.write('e\n')
     grapher.close()
-    sys.stderr.write( "Theory display: %s\n" % picname )
-    os.system( "display %s %s" % (picname, '&' if bg else '' ) )
 
-def read_data( file ):
-    fluxes = []
-    data = []
+    os.system( "display %s" % picname )
 
-    line = file.readline()
-    while line:
-        fluxes.append( float(line) )
-        line = file.readline()
-        data.append([])
-        while line!='\n':
-            data[-1].append(float(line))
-            line = file.readline()
-        line = file.readline()
-
-    return (fluxes,data)
-
-def plot_data( fluxes, data, bg=False ):
-    picname = os.popen( "mktemp", "r" ).read()[:-1]
-    grapher = os.popen( "gnuplot", "w" )
-    grapher.write( "set key off\n" )
-    grapher.write( "set terminal png\nset output '%s'\n" % picname )
-    grapher.write( "plot '-' with points lt 3 pt 0\n" )
-    for i in range(len(fluxes)):
-        for j in data[i]:
-            grapher.write( "%f %f\n" % (fluxes[i],j) )
-    grapher.write( 'e\n' )
-    grapher.close()
-    sys.stderr.write( "Data display: %s\n" % picname )
-    os.system( "display %s %s" % (picname, '&' if bg else '' ) )
-
-def plot_data_theory( fluxes, data, theory, bg=False ):
-    picname = os.popen( "mktemp", "r" ).read()[:-1]
-    grapher = os.popen( "gnuplot", "w" )
-    grapher.write( "set key off\n" )
-    grapher.write( "set terminal png\nset output '%s'\n" % picname )
-    grapher.write( "plot '-' with points pt 2, " )
-    grapher.write( "'-' with lines lw 3" )
-    for i in range(len(theory[0])-1):
-        grapher.write( ", '-' with lines lw 3" )
-    grapher.write('\n' )
-    for i in range(len(fluxes)):
-        for j in data[i]:
-            grapher.write( "%f %f\n" % (fluxes[i],j) )
-    grapher.write('e\n')
-    for curve in range(len(theory[0])):
-        for i,x in enumerate(fluxes):
-            grapher.write( "%f %f\n" % (x,theory[i][curve]) )
-        grapher.write('e\n')
-    grapher.close()
-    sys.stderr.write( "Joint display: %s\n" % picname )
-    os.system( "display %s %s" % (picname, '&' if bg else '' ) )
+def guess_bounds(EC, EJ, EL):
+    ret = ((EC*random(), (1+random())*EC), 
+           (EJ*random(), (1+random())*EJ),
+           (EL*random(), (1+random())*EL))
+    return ret
 
 def main():
 
-    # Gigahertz (factor of h)
-    EC = 2.5
-    EJ = 8.8
-    EL = 0.5
+    EC = 10*random() #2.5
+    EJ = 10*random() #8.8
+    EL = 10*random() #0.5
 
+    print "EC = %f\nEJ = %f\nEL = %f" % (EC,EJ,EL)
+    
     MATRIX_SIZE = 20
-    NUM_ENERGIES = 3
-    NUM_FLUXES = 20
+    NUM_ENERGIES = 5
+    NUM_POINTS = 30
 
     genlags = genlaguerre_array( MATRIX_SIZE )
+    fluxes = [ i*1./NUM_POINTS - .5 for i in range(NUM_POINTS) ]
 
-    fluxes, data = read_data( sys.stdin )
+    data = make_data( genlags,fluxes,EC,EJ,EL,NUM_ENERGIES )
 
-    cut_index = 0
-    while fluxes[cut_index] < -0.1:
-        cut_index += 1
+    #plot_curves( fluxes, data )
 
-#     cut_fluxes = []
-#     cut_data = []
-#     interval = len(fluxes) / NUM_FLUXES
-#     for i in range(len(fluxes)):
-#         if i%interval==0:
-#             cut_fluxes.append(fluxes[i])
-#             cut_data.append(data[i])
-#     data = cut_data
-#     fluxes = cut_fluxes
+    bounds = guess_bounds(EC,EJ,EL)
+    guess = array( ( (bounds[0][0]+bounds[0][1])/2,
+                     (bounds[1][0]+bounds[1][1])/2,
+                     (bounds[2][0]+bounds[2][1])/2 ) )
+
+    print "Guess ranges:"
+    for i in bounds: print " ",i
+    print "Initial guess:",guess
     
-    fluxes = fluxes[cut_index:]
-    data = data[cut_index:]
-
-    theory = make_data( genlags, fluxes, EC, EJ, EL, 3 )
-    plot_data_theory( fluxes, data, theory, True )
-
-    ret = fmin_l_bfgs_b( niceness, (EC,EJ,EL),
+    ret = fmin_l_bfgs_b( niceness, guess,
+                         #approx_grad = True,
                          args = (genlags,fluxes,data,NUM_ENERGIES),
-                         bounds = ((1,4),(7,10),(0.2,1)) )
+                         bounds = bounds )
 
-    new_EC, new_EJ, new_EL = (ret[0][0],ret[0][1],ret[0][2])
+    print "EC = %f\nEJ = %f\nEL = %f" % (ret[0][0],ret[0][1],ret[0][2])
 
-    print "EC = %f\nEJ = %f\nEL = %f" % (new_EC, new_EJ, new_EL)
+    if ret[1] > .01:
+        raise RuntimeError, "Failure to converge."
 
-    new_theory = make_data( genlags, fluxes, new_EC, new_EJ, new_EL, 3 )
-    plot_data_theory( fluxes, data, new_theory, True )
 
 if __name__=='__main__':
     main()
