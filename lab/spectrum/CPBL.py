@@ -119,7 +119,7 @@ def solve_energies( preham, EC, EJ, EL, flux, num ):
         dEL = dot( level[1], opL(level[1],sqrtECo2EL) )
         dEJ = dot( level[1], dot(cosham,level[1]) )
         results.append( array([level[0], dEC, dEJ, dEL]) )
-    return [ i-results[0] for i in results[1:] ]
+    return [ i-results[0] for i in results[1:] ] #diff of arrays
 
 queries = 0
 def niceness( (EC,EJ,EL), genlags, fluxes, data, num_curves ):
@@ -257,6 +257,11 @@ def main():
     EJ = 8.8
     EL = 0.5
 
+    # Gigahertz (factor of h)
+    EC = 2.3
+    EJ = 9
+    EL = 0.6
+
     MATRIX_SIZE = 20
     NUM_ENERGIES = 3
     NUM_FLUXES = 20
@@ -265,29 +270,28 @@ def main():
 
     fluxes, data = read_data( sys.stdin )
 
+    ### Isolate attractive section
+
     cut_index = 0
     while fluxes[cut_index] < -0.1:
         cut_index += 1
 
-#     cut_fluxes = []
-#     cut_data = []
-#     interval = len(fluxes) / NUM_FLUXES
-#     for i in range(len(fluxes)):
-#         if i%interval==0:
-#             cut_fluxes.append(fluxes[i])
-#             cut_data.append(data[i])
-#     data = cut_data
-#     fluxes = cut_fluxes
-    
     fluxes = fluxes[cut_index:]
     data = data[cut_index:]
+
+    ### Cut fluxes by FACTOR
+    FACTOR = 1
+
+    fluxes = [ fluxes[i] for i in range(len(fluxes)) if i%FACTOR==0 ]
+    data = [ data[i] for i in range(len(data)) if i%FACTOR==0 ]
 
     theory = make_data( genlags, fluxes, EC, EJ, EL, 3 )
     plot_data_theory( fluxes, data, theory, True )
 
     ret = fmin_l_bfgs_b( niceness, (EC,EJ,EL),
                          args = (genlags,fluxes,data,NUM_ENERGIES),
-                         bounds = ((1,4),(7,10),(0.2,1)) )
+                         bounds = ((1,4),(7,10),(0.2,1)),
+                         factr = 1e12 )
 
     new_EC, new_EJ, new_EL = (ret[0][0],ret[0][1],ret[0][2])
 
