@@ -5,7 +5,7 @@
 \newcommand{\bra}[1]{\left< #1 \right|}
 \newcommand{\ket}[1]{\left| #1 \right>}
 \newcommand{\braket}[2]{\left< #1 | #2 \right>}
-\newcommand{\innerp}[3]{\left< #1 | #2 | #3 \right>}
+\newcommand{\innerp}[3]{\textstyle\left< #1 \left| #2 \right| #3 \right>}
 
 \newcommand{\figwidth}{0.33\textwidth}
 
@@ -144,11 +144,12 @@ matrix element ${H_{\text{CPB}}}_{nm}$ is equal to the inner product
 $\innerp{n}{H_{\text{CPB}}}{m}$, and so specifying the matrix only
 requires specifying those products. Eqn.~\ref{cpb-H} gives us:
 \begin{equation}
-  \innerp{n}{H_{\text{CPB}}}{m} = \left\{\begin{array}{lcl}
-        4E_C(n-N_g)^2 & : &n=m \\
-        \frac{-E_J}{2} & : &|n-m|=1\\
-        0 & : & \text{otherwise}
-        \end{array}\right.
+  \innerp{n}{H_{\text{CPB}}}{m} = 
+  \begin{cases}
+    4E_C(n-N_g)^2 & \text{if $n=m$} \\
+    \frac{-E_J}{2} & \text{if $|n-m|=1$}\\
+    0 & \text{otherwise}
+  \end{cases}
 \end{equation}
 
 Truncating this tridiagonal matrix allows us to approximate its
@@ -259,6 +260,7 @@ the strength of the inductor, $E_L$. In order to analyze this
 equation, we will immediately adopt a change of variables, $\varphi
 \rightarrow (\varphi + \frac{2\pi\phi}{\phi_0})$:
 \begin{equation}
+  \label{H}
   H = -4E_C\frac{d^2}{d\varphi^2}-E_J\cos\left(\varphi+
     \frac{2\pi\phi}{\phi_0}\right)+
   \frac{1}{2} E_L\varphi^2.
@@ -280,10 +282,11 @@ Simply substituting the coefficients in $H_0$ into the SHO equations,
 with $\ket{n}$ now referring to SHO basis states over $\varphi$, gives
 us that
 \begin{equation}
-  \innerp{n}{H_0}{m} = \left\{\begin{array}{lcl}
-      \sqrt{8E_LE_C}\left(\frac{n+1}{2}\right) & : &n=m \\
-      0 & : & \text{otherwise.}
-    \end{array}\right.
+  \innerp{n}{H_0}{m} = 
+  \begin{cases}
+    \sqrt{8E_LE_C}\left(\frac{n+1}{2}\right) & \text{if $n=m$} \\
+    0 & \text{otherwise.}
+  \end{cases}
   \label{inner-H0}
 \end{equation}
 The inner product with $V$, on the other hand, requires a fairly
@@ -370,11 +373,17 @@ There are many ways to define a ``badness of fit'' for theoretical
 curves against these data. In our case, the simplest and most
 effective method is, for each point in the data set, to find the
 vertically nearest curve in the theoretical set, take the difference
-between the two, and add together the squares of those differences. We
-can then use generic multi-parameter minimization routines to find the
-best fitting values of $E_C$, $E_J$, and $E_L$.\cite{Byrd}\cite{Zhu}
-The results of this approach are displayed in Figs.~\ref{pre-fit} and
-\ref{post-fit}.
+between the two, and add together the squares of those
+differences. That is, for a given fit the badness, $B$, is defined as
+\begin{equation}
+\label{badness}
+B = \sum_{p \in \text{data}} (t-p)^2,
+\end{equation}
+where $t$ is the closest point in the theoretical data set with the
+same flux. We can then use generic multi-parameter minimization
+routines to find the best fitting values of $E_C$, $E_J$, and
+$E_L$.\cite{Byrd}\cite{Zhu} The results of this approach are displayed
+in Figs.~\ref{pre-fit} and \ref{post-fit}.
 
 \begin{figure}
 \includegraphics[width=\figwidth]{CPBL-prefit.png}
@@ -408,6 +417,125 @@ require more human input.
 
 \section{Speeding it Up}
 
+Simulation is one of the few areas left in programming where
+computational speed remains a limiting factor. Mathematica models of
+the CPBL built by Jens Koch already existed when we began this
+project, and we used them to verify our results. They were fast enough
+to generate the plots shown here but not fast enough to run that
+computation over and over again to perform a fit. We used several
+different optimizations to make up that difference.
+
+The process of fitting a data set requires repeatedly calculating
+energy spectra for different values of $E_C$, $E_J$, and
+$E_L$. Calculating that spectrum means repeatedly solving the
+eigenenergies of $H$ across a range of values of $\phi$. Naturally,
+lots of work is duplicated when these calculations are performed
+without any caching. As it turned out, the most expensive operation
+was calculating the coefficients of the generalized Laguerre
+polynomials in the construction of $H$. (One might guess that solving
+for eigenvalues would be harder, but since we only need a handful of
+eigenenergies we can keep our matrices fairly small.) Since Laguerre
+polynomials obey a recursive relation, some time can be saved by
+solving for all of them at once, rather than separately for each
+element of $H$. However, a far more important realization is that the
+coefficients of $L_n^\alpha$ are independent of both $\phi$ and the
+experimental parameters, so the matrix of polynomials only needs to be
+calculated once for an entire fitting procedure.
+
+A similar speedup results from the fact that in all of
+Eqns.~\ref{inner-H0} and \ref{inner-V}, only two terms in
+Eqn.~\ref{inner-V} depend on the value of $\phi$. Thus the majority of
+work needed to calculate $H$ can be done once for each trial of the
+parameters $E_C$, $E_J$, and $E_L$, rather than for every value of
+$\phi$ plotted within that trial. That leaves only a trigonometric
+term ($\cos\left(2\pi\phi/\phi_0\right)$ or
+($\sin\left(2\pi\phi/\phi_0\right)$) to be calculated and the
+diagonalization operation to be performed for each value of
+$\phi$. These optimizations together speed up a fitting operation by
+almost twenty times.
+
+We achieved a second major speedup by taking advantage of the
+capabilities of modern optimization algorithms.\cite{Byrd}\cite{Zhu}
+Many of these algorithms calculate local partial derivatives in order
+to improve their search for minima. Without assistance, these routines
+can approximate local derivatives by evaluating several points in
+close proximity, but it is also possible to supply these routines with
+local derivative information we calculate ourselves. Rather than
+having our routines evaluate the badness of a fit numerous times in a
+small region around each set of trial parameters, we can calculate the
+partial derivatives of the badness of fit in parallel with the fit
+itself. As one might expect, calculating the derivatives this way
+avoids lots of duplicated effort.
+
+Recalling our definition of ``badness of fit'' in Eqn.~\ref{badness},
+the partial derivative for a given parameter $E_*$ is
+\begin{equation}
+  \label{partials}
+  \frac{\partial B}{\partial E_{*}} =
+  \sum_{p \in \text{data}}2(t-p)\frac{\partial t}{\partial E_*}.
+\end{equation}
+The values of $t$ are just differences among eigenvalues of $H$, so we
+need to calculate the derivatives of those eigenvalues. Just how to do
+that is not immediately obvious, but beginning with Schr\"odinger's
+equation, we can develop a very convenient intermediate result.
+\begin{equation}
+  H\ket{\psi} = E\ket{\psi}
+\end{equation}
+Take the partial derivative of both sides.
+\begin{equation}
+  \frac{\partial}{\partial E_*} (H\ket{\psi}) =
+  \frac{\partial}{\partial E_*} (E\ket{\psi})
+\end{equation}
+Expand via the product rule.
+\begin{equation}
+  \frac{\partial H}{\partial E_*}\ket{\psi} +
+  H\frac{\partial}{\partial E_*}\ket{\psi} =
+  \frac{\partial E}{\partial E_*}\ket{\psi} +
+  E\frac{\partial}{\partial E_*}\ket{\psi}
+\end{equation}
+Multiply both sides by $\bra{\psi}$.
+\begin{align}
+  \begin{split}
+  \innerp{\psi}{\frac{\partial H}{\partial E_*}}{\psi} +
+  \innerp{\psi}{H\frac{\partial}{\partial E_*}}{\psi} =&
+  \innerp{\psi}{\frac{\partial E}{\partial E_*}}{\psi}\\ &+
+  \innerp{\psi}{E\frac{\partial}{\partial E_*}}{\psi}
+  \end{split}
+\end{align}
+The $H$ in the second term comes out as a factor of $E$, and the third
+term collapses.
+\begin{equation}
+  \innerp{\psi}{\frac{\partial H}{\partial E_*}}{\psi} +
+  E\innerp{\psi}{\frac{\partial}{\partial E_*}}{\psi} =
+  \frac{\partial E}{\partial E_*} +
+  E\innerp{\psi}{\frac{\partial}{\partial E_*}}{\psi}
+\end{equation}
+Finally, terms on both sides cancel.
+\begin{equation}
+  \frac{\partial E}{E_*} =
+  \innerp{\psi}{\frac{\partial H}{\partial E_*}}{\psi}.
+  \label{convenient}
+\end{equation}
+Eqn.~\ref{convenient} leaves us with a very convenient formula for
+calculating the partial derivatives of the eigenenergies of $H$.
+
+Now, going back to Eqn.~\ref{H}, we see that
+\begin{align}
+  \label{dC}
+  \frac{\partial H}{\partial E_C} &= -4\frac{\partial}{\partial
+    \varphi^2}\\
+  \label{dJ}
+  \frac{\partial H}{\partial E_J} &= \cos(\varphi +
+  \frac{2\pi\phi}{\phi_0})\\
+  \label{dL}
+  \frac{\partial H}{\partial E_L} &= \frac{1}{2}\varphi^2.
+\end{align}
+Our eigenvalue routines can give us the engenvectors $\ket{\psi}$
+associated with each eigenvalue $E$ with little additional effort. In
+the case of $\partial H/\partial E_J$, we have already calculated the
+matrix form of Eqn.~\ref{dJ}, namely the matrix $V$ without the extra
+factor of $-E_J$, and taking the inner product of that matrix with
+$\ket{\psi}$ gives us the partial of $E$ with respect to $E_J$.
 
 
 \section{Conclusion}
