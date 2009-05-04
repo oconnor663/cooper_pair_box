@@ -19,17 +19,17 @@
   Bishop, Schoelkopf et al, Devoret et al}
 
 \begin{abstract}
-  The Cooper pair box (CPB) is a well-studied quantum circuit that can be
+  The Cooper pair box (CPB) is a well-studied quantum circuit that can
   function as an artificial atom. The inductively-shunted Cooper pair
   box (CPBL) is much less well-studied. Adding an inductive shunt
   promises to mitigate ambient charge noise around the circuit, but it
   also produces a Hamiltonian with completely different
   characteristics. The first examples of these circuits are being
   studied in by Vlad Manucharyan, and while computer models of the
-  energy spectrum for these circuits exist, they are too slow to be
-  helpful in interpreting the experimental data. We develop a more
-  efficient model that is fast enough to run curve fitting on
-  experimental data, and demonstrate the results of this model.
+  energy spectrum for these circuits exist, faster models would be
+  more helpful in interpreting the experimental data. We develop a
+  computer model of the CPBL that is fast enough to run curve fitting
+  on experimental data, and demonstrate the results of this model.
 \end{abstract}
 
 \maketitle
@@ -56,32 +56,33 @@ from its environment to hold its state long enough to perform
 meaningful computation. At the same time, though, it has to be coupled
 to its environment enough to be reliably measurable with the
 computation is finished. This is difficult enough that, at present,
-one of the largest quantum computations ever performed
-\cite{Vandersypen} was the factorization of the number $15$.
+one of the largest quantum computations ever performed was the
+factorization of the number fifteen.\cite{Vandersypen}
 
 One of the fields in which research is proceeding on this front is
 circuit quantum electrodynamics. Quantum circuits have several
 potential advantages over other forms of qubits. They sit on a chip
 rather than migrating through space, which greatly simplifies research
 compared to various atomic methods, and they can be manufactured using
-fairly standard circuit printing techniques. More importantly, while
-atomic systems have fixed energy spectra, researchers can tune the
-parameters of their quantum circuits to produce artificial atoms with
-a range of different spectra.
+standard circuit printing techniques. More importantly, while atomic
+systems have fixed energy spectra, researchers can tune the parameters
+of their quantum circuits to produce artificial atoms with a range of
+different spectra.
 
 Computer models of these circuits can aid experimental research in
 several ways. Theoretical models of the device spectrum highlight
-extraneous or unexpected features in the data, and help in identifying
+extraneous or unexpected features in the data, and help to identify
 those features. Computer models can explore parameter regimes not yet
-probed by experiment, in seconds rather than weeks. Also, in our case
-at least, the manufacturing processes for our circuits involve
-significant uncertainties. Insulating layers in a Josephson junction,
-for example, are created by depositing a layer of aluminum, allowing
-it to oxidize for a period of time, and depositing a second aluminum
-layer on top. The thickness of the resulting oxide layer is highly
-variable, and it continues to grow after the circuit is already
-complete. For this and similar reasons, the design parameters of our
-circuits are unknown until we measure them against theoretical models.
+probed by experiment, and they can do it in seconds rather than
+days. Also, in our case at least, the manufacturing processes for our
+circuits involve significant uncertainties. The insulating layer in a
+Josephson junction, for example, are created by depositing a layer of
+aluminum, allowing it to oxidize for a period of time, and depositing
+a second aluminum layer on top. The thickness of the resulting oxide
+layer is highly variable, and it continues to grow after the circuit
+is already complete. For this and similar reasons, the design
+parameters of our circuits are unknown until we measure them against
+theoretical models.
 
 \section{Modeling the Cooper Pair Box}
 
@@ -105,18 +106,19 @@ gate capacitor, and a Josephson junction.
   \label{junction}
 \end{figure}
 
-A Josephson junction (Fig.~\ref{junction}) is a circuit element
-consists of two superconducting leads joined across a thin insulating
-boundary. In our devices, Josephson junctions are constructed by
-depositing a layer of aluminum, allowing a thin oxide layer to form on
-the surface of that layer, and finally depositing a second layer of
-aluminum on top. The oxide acts as an insulator, and at sufficiently
-low temperatures the aluminum leads become superconducting. A
-Josephson junction acts like a capacitor across its insulating layer,
-but it also allows Cooper pairs of electrons to tunnel through. We can
-treat the Josephson junction as a capacitor and a tunneling junction
-in parallel, and we denote the capacitance and tunneling coefficient
-of these virtual components by $E_C$ and $E_J$, respectively.
+The Josephson junction (Fig.~\ref{junction}) is a circuit element
+consisting of two superconducting leads joined across a thin
+insulating boundary. In our devices, Josephson junctions are
+constructed by depositing a layer of aluminum, allowing a thin oxide
+layer to form on the surface of that layer, and finally depositing a
+second layer of aluminum on top. The oxide acts as an insulator, and
+at sufficiently low temperatures the aluminum leads become
+superconducting. A Josephson junction acts like a capacitor across its
+insulating layer, but it also allows Cooper pairs of electrons to
+tunnel through. We can treat the Josephson junction as a capacitor and
+a tunneling junction in parallel, and we denote the capacitance and
+tunneling coefficient of these virtual components by $E_C$ and $E_J$,
+respectively.
 
 The capacitative properties of the Josephson junction, together with
 the gate capacitor, create a superconducting island in the CPB,
@@ -124,25 +126,23 @@ indicated by the dotted line in Fig.~\ref{cpb-circuit}. This lets us
 treat the CPB in its ``charge basis,'' where each eigenstate denotes a
 number of Cooper pairs added to or removed from the island. In the
 charge basis, the Hamiltonian of the CPB is
-\begin{align}
+\begin{multline}
 \label{cpb-H}
-\begin{split}
-  H_{\text{CPB}} = \sum_{n=-\infty}^{+\infty}& \frac{-E_J}{2}\left(
-      \ket{n}\bra{n-1} + \ket{n-1}\bra{n} \right) \\
-    & {} + 4E_C(n-N_g)^2\ket{n}\bra{n},
-\end{split}
-\end{align}
+  H_{\text{CPB}} = \sum_{n=-\infty}^{+\infty} \left(\frac{-E_J}{2}\left(
+      \ket{n}\bra{n-1} + \ket{n-1}\bra{n} \right)\right. \\
+  \left.\phantom{\frac{-E_J}{2}} + 4E_C(n-N_g)^2\ket{n}\bra{n}\right),
+\end{multline}
 where $n$ represents the number of tunneled electron pairs and $N_g$
 is the offset charge across the capacitor.
 
 In order to calculate the energy spectrum of the CPB as a function of
-the offset charge, $N_g$, we will need to express that Hamiltonian as
+the offset charge, $N_g$, we will need to express $H_{\text{CPB}}$ as
 a matrix in the charge basis. Note that $H_{\text{CPB}}$ will be an
 infinite matrix not just downward and rightward but, because $n$ and
 $m$ can take all integer values, leftward and upward as well. Each
 matrix element ${H_{\text{CPB}}}_{nm}$ is equal to the inner product
-$\innerp{n}{H_{\text{CPB}}}{m}$, and so specifying the matrix only
-requires specifying those products. Eqn.~\ref{cpb-H} gives us:
+$\innerp{n}{H_{\text{CPB}}}{m}$, so specifying those inner products
+specifies the matrix itself. Eqn.~\ref{cpb-H} gives us:
 \begin{equation}
   \innerp{n}{H_{\text{CPB}}}{m} = 
   \begin{cases}
@@ -238,13 +238,11 @@ Adding the inductor requires that we make several changes to our
 equations. First, since no superconducting island exists in the CPBL,
 the charge basis is no longer meaningful. We will instead use another
 basis from the CPB called the phase basis. The phase term arises from
-the Josephson equations, which we do not derive here. (See
-\cite{Feynman}.) Expressed in the phase basis, the Hamiltonian of the
-CPB takes the form
+the Josephson equations. (See \cite{Feynman}.) Expressed in the phase
+basis, the Hamiltonian of the CPB takes the form
 \begin{equation}
-  H_{\text{CPB}} = -4E_C\frac{d^2}{d\varphi^2}-E_J\cos{\varphi},
+  H_{\text{CPB}} = -4E_C\frac{d^2}{d\varphi^2}-E_J\cos{\varphi}.
 \end{equation}
-where $\varphi$ varies from $0$ to $2\pi$.
 
 Another consequence of the missing island is that no offset charge can
 exist on the CPBL, and so we will instead plot the energy spectrum
@@ -258,20 +256,20 @@ inductor to $H_{\text{CPB}}$, producing the Hamiltonian
 This equation also introduces a third design parameter for the CPBL,
 the strength of the inductor, $E_L$. In order to analyze this
 equation, we will immediately adopt a change of variables, $\varphi
-\rightarrow (\varphi + \frac{2\pi\phi}{\phi_0})$:
+\rightarrow (\varphi + \frac{2\pi\phi}{\phi_0})$.
 \begin{equation}
   \label{H}
   H = -4E_C\frac{d^2}{d\varphi^2}-E_J\cos\left(\varphi+
     \frac{2\pi\phi}{\phi_0}\right)+
   \frac{1}{2} E_L\varphi^2.
 \end{equation}
-Having done that, we can see that, apart from the cosine term in the
-middle, $H$ takes the form of a simple harmonic oscillator (SHO). It will
-therefore be convenient to approximate $H$ in the harmonic oscillator
-basis over $\varphi$. Note that this is again a discrete basis, though
-unlike the CPB, its matrix form extends infinitely only in the two
-conventional directions. To facilitate calculations in this basis, we
-separate $H$ into two pieces:
+After the change we can see that, apart from the cosine term in the
+middle, $H$ takes the form of a simple harmonic oscillator (SHO). It
+will therefore be convenient to approximate $H$ in the harmonic
+oscillator basis over $\varphi$. Note that this is again a discrete
+basis, though unlike the CPB, its matrix form extends infinitely only
+in the two conventional directions. To facilitate calculations in this
+basis, we separate $H$ into two pieces:
 \begin{align}
   H & = H_0 + V\\
   H_0 & = -4E_C\frac{d^2}{d\varphi^2} +
@@ -294,15 +292,16 @@ complicated integral. The result is
 \begin{equation}
   \innerp{n}{V}{m} = \left\{\begin{array}{l}
       -E_J(-2)^{-m'}\cos\left(\frac{2\pi\phi}{\phi_0}\right)\varphi_0^{2m'}\\
-      \phantom{-E_J}*\sqrt{\frac{n'!}{(n'+2m')!}}
+      \quad{}*\sqrt{\frac{n'!}{(n'+2m')!}}
       \exp\left(\frac{-\varphi_0^2}{4}\right)\\
-      \phantom{-E_J}*L_{n'}^{2m'}\left(\frac{\varphi_0^2}{2}\right)
-      \phantom{{}^{{}+1}} : n \equiv m \pmod{2} \\
-      -E_J(-2)^{-m'}\frac{1}{\sqrt{2}}\sin\left(\frac{2\pi\phi}{\phi_0}\right)\varphi_0^{2m'+1}\\
-      \phantom{-E_J}*\sqrt{\frac{n'!}{(n'+2m'+1)!}}
+      \quad{}*L_{n'}^{2m'}\left(\frac{\varphi_0^2}{2}\right)
+      \phantom{{}^{{}+1}}\qquad \text{if $n \equiv m \pmod{2}$}\\
+      -E_J(-2)^{-m'}\frac{1}{\sqrt{2}}\sin
+      \left(\frac{2\pi\phi}{\phi_0}\right)\varphi_0^{2m'+1}\\
+      \quad{}*\sqrt{\frac{n'!}{(n'+2m'+1)!}}
       \exp\left(\frac{-\varphi_0^2}{4}\right)\\
-      \phantom{-E_J}*L_{n'}^{2m'+1}\left(\frac{\varphi_0^2}{2}\right)
-      \phantom{{}^{{}}} : n \not\equiv m \pmod{2},
+      \quad{}*L_{n'}^{2m'+1}\left(\frac{\varphi_0^2}{2}\right)
+      \qquad\text{if $n \not\equiv m \pmod{2}$},
 \end{array}\right.
 \label{inner-V}
 \end{equation}
@@ -320,10 +319,10 @@ with the CPB, we can now truncate this Hamiltonian and approximate its
 eigenvalues numerically. Again as before, the y-axis and parameter
 values are given in gigahertz. Fig.~\ref{cpbl-theory} shows the
 spectrum calculated as a difference from the ground state and plotted
-with respect to magnetic flux for a set of parameter values which
-approximates some of the devices our lab has tested empirically.
+with respect to magnetic flux, using a set of parameter values close
+to those that our lab has tested empirically.
 
-\begin{figure}
+\begin{figure} 
 \includegraphics[width=\figwidth]{CPBL-theory.png}
 \caption{ Energy spectrum for the CPBL. $E_C=2.5$, $E_J=8.8$, and
   $E_L=0.5$. The y-axis and parameter values are in gigahertz, and the
@@ -334,10 +333,10 @@ approximates some of the devices our lab has tested empirically.
 
 \section{Experimental Data}
 Vlad Manucharyan has been measuring the energy spectra of some of the
-first CPBL devices ever produced, and one of our immediate goals was
-to fit our theoretical spectra against his data. Energy curves were
+first CPBL devices ever produced, and one of the goals of this project
+is to fit our theoretical spectra against his data. Energy curves were
 originally drawn from those data by hand, but a simple threshold
-filter automates that process. Raw data (Figs.~\ref{raw-1} and
+filter can automate that process. Raw data (Figs.~\ref{raw-1} and
 \ref{raw-2}) can be filtered into sets of points suitable for fitting
 (Figs.~\ref{filter-1} and \ref{filter-2}).
 
@@ -345,27 +344,27 @@ filter automates that process. Raw data (Figs.~\ref{raw-1} and
 \includegraphics[width=\figwidth]{colorful-data.png}
 \caption{ Raw data displayed in Gnuplot. Though the parameters are not
 identical, the scale here is approximately a zoom on the central
-region of Fig.~\ref{cpbl-theory}}
+region of Fig.~\ref{cpbl-theory}.}
 \label{raw-1}
 \end{figure}
 
 \begin{figure}
 \includegraphics[width=\figwidth]{CPBL-color.png}
 \caption{ Raw data displayed in Gnuplot. For scale, the right half of
-  this plot is approximately the same area plotted in
+  this plot is approximately the same region plotted in the whole of
   Fig.~\ref{raw-1}. }
 \label{raw-2}
 \end{figure}
 
 \begin{figure}
 \includegraphics[width=\figwidth]{colorful-points.png}
-\caption{ Curves filtered out of the data in Fig.~\ref{raw-1} }
+\caption{ Curves derived from the data in Fig.~\ref{raw-1} }
 \label{filter-1}
 \end{figure}
 
 \begin{figure}
 \includegraphics[width=\figwidth]{CPBL-data.png}
-\caption{ Curves filtered out of the data in Fig.~\ref{raw-2} }
+\caption{ Curves derived from the data in Fig.~\ref{raw-2} }
 \label{filter-2}
 \end{figure}
 
@@ -373,7 +372,7 @@ There are many ways to define a ``badness of fit'' for theoretical
 curves against these data. In our case, the simplest and most
 effective method is, for each point in the data set, to find the
 vertically nearest curve in the theoretical set, take the difference
-between the two, and add together the squares of those
+between it and the data point, and add together the squares of these
 differences. That is, for a given fit the badness, $B$, is defined as
 \begin{equation}
 \label{badness}
@@ -402,18 +401,18 @@ in Figs.~\ref{pre-fit} and \ref{post-fit}.
 \label{post-fit}
 \end{figure}
 
-The only human input to the fit depicted in Fig.~\ref{post-fit} was
-the initial parameter guess and the identification of the zero-flux
-point on the x-axis. Note that the lines jutting out to the left and
-right of the bottom peak in that figure represent a transition between
-two non-ground states, and that a better fit could be had by plotting
+The only human input to the fit depicted in Fig.~\ref{post-fit} is the
+initial parameter guess and the identification of the zero-flux point
+on the x-axis. Note that the lines jutting out to the left and right
+of the bottom peak in that figure represent a transition between two
+non-ground states, and that the fit could be improved by plotting
 those transitions along with the ground state transitions. The line
 appearing clearly between the upper two spectral lines in that figure
 is not one of these transitions but rather a resonance from our
-experimental setup outside the CPBL itself, and it causes the lines
-nearest to it to deviate slightly from the theory. Cleaning out these
+experimental setup outside the CPBL itself, and it causes the nearby
+lines to deviate slightly from the theory. Cleaning out these
 extraneous points would improve the fit as well, though it would
-require more human input.
+be difficult to automate.
 
 \section{Speeding it Up}
 
@@ -423,35 +422,37 @@ the CPBL built by Jens Koch already existed when we began this
 project, and we used them to verify our results. They were fast enough
 to generate the plots shown here but not fast enough to run that
 computation over and over again to perform a fit. We used several
-different optimizations to make up that difference.
+different optimizations to achieve the speeds necessary to perform
+these fits.
 
 The process of fitting a data set requires repeatedly calculating
 energy spectra for different values of $E_C$, $E_J$, and
-$E_L$. Calculating that spectrum means repeatedly solving the
-eigenenergies of $H$ across a range of values of $\phi$. Naturally,
-lots of work is duplicated when these calculations are performed
-without any caching. As it turned out, the most expensive operation
-was calculating the coefficients of the generalized Laguerre
-polynomials in the construction of $H$. (One might guess that solving
-for eigenvalues would be harder, but since we only need a handful of
-eigenenergies we can keep our matrices fairly small.) Since Laguerre
-polynomials obey a recursive relation, some time can be saved by
-solving for all of them at once, rather than separately for each
-element of $H$. However, a far more important realization is that the
-coefficients of $L_n^\alpha$ are independent of both $\phi$ and the
-experimental parameters, so the matrix of polynomials only needs to be
-calculated once for an entire fitting procedure.
+$E_L$. Calculating those spectra means repeatedly solving for the
+eigenenergies of $H$ across a range of values of $\phi$
+values. Naturally, lots of work is duplicated when these calculations
+are all performed in isolation. As it turns out, the most expensive
+operation in our case is calculating the coefficients of the
+generalized Laguerre polynomials to construct the $H$ matrix. (One
+might guess that solving for eigenvalues would be harder, but since we
+only need a handful of eigenenergies we can keep our matrices fairly
+small.) Since Laguerre polynomials obey a recursive relation, some
+time can be saved by solving for all of them at once, rather than
+separately for each element of $H$. However, a far more important
+realization is that the coefficients of $L_n^\alpha$ are independent
+of both $\phi$ and the experimental parameters, so the matrix of
+polynomials only needs to be calculated once for an entire fitting
+procedure.
 
 A similar speedup results from the fact that in all of
 Eqns.~\ref{inner-H0} and \ref{inner-V}, only two terms in
 Eqn.~\ref{inner-V} depend on the value of $\phi$. Thus the majority of
-work needed to calculate $H$ can be done once for each trial of the
+work needed to assemble $H$ can be done once for each trial of the
 parameters $E_C$, $E_J$, and $E_L$, rather than for every value of
-$\phi$ plotted within that trial. That leaves only a trigonometric
-term ($\cos\left(2\pi\phi/\phi_0\right)$ or
+$\phi$ plotted within that trial. That leaves only one trigonometric
+term (either $\cos\left(2\pi\phi/\phi_0\right)$ or
 ($\sin\left(2\pi\phi/\phi_0\right)$) to be calculated and the
 diagonalization operation to be performed for each value of
-$\phi$. These optimizations together speed up a fitting operation by
+$\phi$. These optimizations altogether speed up a fitting operation by
 almost twenty times.
 
 We achieved a second major speedup by taking advantage of the
@@ -494,14 +495,12 @@ Expand via the product rule.
   E\frac{\partial}{\partial E_*}\ket{\psi}
 \end{equation}
 Multiply both sides by $\bra{\psi}$.
-\begin{align}
-  \begin{split}
+\begin{multline}
   \innerp{\psi}{\frac{\partial H}{\partial E_*}}{\psi} +
-  \innerp{\psi}{H\frac{\partial}{\partial E_*}}{\psi} =&
-  \innerp{\psi}{\frac{\partial E}{\partial E_*}}{\psi}\\ &+
+  \innerp{\psi}{H\frac{\partial}{\partial E_*}}{\psi} =\\
+  \innerp{\psi}{\frac{\partial E}{\partial E_*}}{\psi}+
   \innerp{\psi}{E\frac{\partial}{\partial E_*}}{\psi}
-  \end{split}
-\end{align}
+\end{multline}
 The $H$ in the second term comes out as a factor of $E$, and the third
 term collapses.
 \begin{equation}
@@ -510,7 +509,7 @@ term collapses.
   \frac{\partial E}{\partial E_*} +
   E\innerp{\psi}{\frac{\partial}{\partial E_*}}{\psi}
 \end{equation}
-Finally, terms on both sides cancel.
+Finally, the two common terms cancel.
 \begin{equation}
   \frac{\partial E}{E_*} =
   \innerp{\psi}{\frac{\partial H}{\partial E_*}}{\psi}.
@@ -530,16 +529,48 @@ Now, going back to Eqn.~\ref{H}, we see that
   \label{dL}
   \frac{\partial H}{\partial E_L} &= \frac{1}{2}\varphi^2.
 \end{align}
-Our eigenvalue routines can give us the engenvectors $\ket{\psi}$
+Our eigenvalue routines can give us the eigenvectors $\ket{\psi}$
 associated with each eigenvalue $E$ with little additional effort. In
 the case of $\partial H/\partial E_J$, we have already calculated the
 matrix form of Eqn.~\ref{dJ}, namely the matrix $V$ without the extra
 factor of $-E_J$, and taking the inner product of that matrix with
-$\ket{\psi}$ gives us the partial of $E$ with respect to $E_J$.
+$\ket{\psi}$ gives us $\frac{\partial E}{\partial E_J}$.
 
+In order to deal with Eqns.~\ref{dC} and \ref{dL}, we return to the
+machinery of the SHO and recognize that
+\begin{align}
+  -4\frac{\partial}{\partial \varphi^2} &= -\sqrt{\frac{E_L}{2E_C}}
+  (a-a^\dagger)^2\\
+  \intertext{and}
+  \frac{1}{2}\varphi^2 &= \sqrt{\frac{E_C}{2E_L}} (a+a^\dagger)^2.
+\end{align}
+We could express these operators in matrix form, but it is simpler and
+faster to just apply the raising and lowering operators explicitly to
+each eigenvector and dot the result with the original eigenvector.
+
+Finally, we just sum up the partial derivatives using
+Eqn.~\ref{partials} just as we sum up the result with
+Eqn.~\ref{badness}. Calculating the derivatives ourselves, rather than
+approximating them with extra function calls, nets us another speedup
+of nearly a factor of four.
 
 \section{Conclusion}
-
+All the code for our project was written in Python, making extensive
+use of the SciPy libraries. While Python is an excellent language for
+fast prototyping, Python programs have a reputation for running
+slowly, and at the beginning of our project it was unclear whether we
+could realize substantial gains in efficiency without eventually
+moving to a compiled language like C. The fact that we achieved
+efficiency gains of two orders of magnitude using Python alone
+demonstrates that there was significant room for improvement both in
+the algorithmics and in the mathematics of the CPBL model. At this
+point, our code can fit a complete data set in one to two minutes, and
+thinning out the data can bring that time down to about fifteen
+seconds without significantly affecting the accuracy of the fit. We
+hope that our code will be useful to Vlad Manucharyan and others as
+they continue to explore the CPBL, and that the techniques we
+developed will prove useful for implementing future models of the CPBL
+and other systems.
 
 
 \begin{thebibliography}{9}
