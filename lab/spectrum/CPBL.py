@@ -8,12 +8,17 @@ from scipy.special import genlaguerre, poly1d
 from scipy.optimize import *
 from random import random
 
+def id(x):
+    return x
+
 def genlaguerre_array( size ):
-    ret = [ [ 0 for a in range(size) ] for n in range(size) ]
-    for a in range(size):
+    height = size
+    width = size
+    ret = [ [ 0 for a in range(width) ] for n in range(height) ]
+    for a in range(width):
         ret[0][a] = genlaguerre(0,a)
         ret[1][a] = genlaguerre(1,a)
-        for n in range(2,size):
+        for n in range(2,height):
             ret[n][a] = ((2*(n-1)+a+1-poly1d([1,0]))*ret[n-1][a] - \
                              (n-1+a)*ret[n-2][a] ) /n
     return ret
@@ -118,6 +123,7 @@ def solve_energies( preham, EC, EJ, EL, flux, num ):
         dEC = dot( level[1], opC(level[1],negsqrtELo2EC) )
         dEL = dot( level[1], opL(level[1],sqrtECo2EL) )
         dEJ = dot( level[1], dot(cosham,level[1]) )
+        
         results.append( array([level[0], dEC, dEJ, dEL]) )
     return [ i-results[0] for i in results[1:] ] #diff of arrays
 
@@ -158,7 +164,7 @@ def niceness( (EC,EJ,EL), genlags, fluxes, data, num_curves ):
             f_EC += 2 * diff * E[index][1]
             f_EJ += 2 * diff * E[index][2]
             f_EL += 2 * diff * E[index][3]
-    
+
     print "Niceness queried (# %i): %f" \
         "\n\t%.20f\n\t%.20f\n\t%.20f" % \
         (queries,f,EC,EJ,EL)
@@ -219,6 +225,7 @@ def plot_data( fluxes, data, bg=False ):
     grapher = os.popen( "gnuplot", "w" )
     grapher.write( "set key off\n" )
     grapher.write( "set terminal png\nset output '%s'\n" % picname )
+    grapher.write( "set xrange [%f:%f]\n" % (fluxes[0],fluxes[-1]) )
     grapher.write( "plot '-' with points lt 3 pt 0\n" )
     for i in range(len(fluxes)):
         for j in data[i]:
@@ -233,6 +240,7 @@ def plot_data_theory( fluxes, data, theory, bg=False ):
     grapher = os.popen( "gnuplot", "w" )
     grapher.write( "set key off\n" )
     grapher.write( "set terminal png\nset output '%s'\n" % picname )
+    grapher.write( "set xrange [%f:%f]\n" % (fluxes[0],fluxes[-1]) )
     grapher.write( "plot '-' with points pt 2, " )
     grapher.write( "'-' with lines lw 3" )
     for i in range(len(theory[0])-1):
