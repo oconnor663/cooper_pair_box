@@ -21,6 +21,8 @@ def hamiltonian(radius,ng,EJoverEC):
 def make_plot( image_name, tmp_names, EJoverEC ):
     out = os.popen( "gnuplot", "w" )
     out.write( "set terminal png \n set output '%s'\n" % image_name )
+    out.write( "set xlabel 'Offset charge (2e)'\n" )
+    out.write( "set ylabel 'Energy (GHz)'\n" )
     out.write( "set key off \n" )
     out.write( "set title 'Ej/Ec = %.2f' \n" % EJoverEC )
     out.write( "set yrange [-30:30] \n" )

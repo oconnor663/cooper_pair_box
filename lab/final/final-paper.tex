@@ -7,8 +7,6 @@
 \newcommand{\braket}[2]{\left< #1 | #2 \right>}
 \newcommand{\innerp}[3]{\textstyle\left< #1 \left| #2 \right| #3 \right>}
 
-\newcommand{\figwidth}{0.33\textwidth}
-
 \hyphenation{transmon}
 
 \begin{document}
@@ -165,19 +163,19 @@ $H_{\text{CPB}}$. For larger values the spectral lines smooth out and
 move apart, approaching a constant spacing.
 
 \begin{figure}
-  \includegraphics[width=\figwidth]{CPB-1.png}
+  \includegraphics[width=\linewidth]{CPB-1.png}
   \caption{Energy spectrum vs. $N_g$ for the CPB with
     $\frac{E_J}{E_c}=1$}
   \label{cpb-1}
 \end{figure}
 \begin{figure}
-  \includegraphics[width=\figwidth]{CPB-10.png}
+  \includegraphics[width=\linewidth]{CPB-10.png}
   \caption{Energy spectrum vs. $N_g$ for the CPB with
     $\frac{E_J}{E_c}=10$}
   \label{cpb-10}
 \end{figure}
 \begin{figure}
-  \includegraphics[width=\figwidth]{CPB-30.png}
+  \includegraphics[width=\linewidth]{CPB-30.png}
   \caption{Energy spectrum vs. $N_g$ for the CPB with
     $\frac{E_J}{E_c}=30$. Note that the deviations from periodicity on
     the left and right ends of each line are artifacts of the
@@ -290,15 +288,15 @@ complicated integral. The result is
 \begin{equation}
   \innerp{n}{V}{m} = \left\{\begin{array}{l}
       -E_J(-2)^{-m'}\cos\left(\frac{2\pi\phi}{\phi_0}\right)\varphi_0^{2m'}\\
-      \quad{}*\sqrt{\frac{n'!}{(n'+2m')!}}
+      \quad{}\times \sqrt{\frac{n'!}{(n'+2m')!}}
       \exp\left(\frac{-\varphi_0^2}{4}\right)\\
-      \quad{}*L_{n'}^{2m'}\left(\frac{\varphi_0^2}{2}\right)
+      \quad{}\times L_{n'}^{2m'}\left(\frac{\varphi_0^2}{2}\right)
       \phantom{{}^{{}+1}}\qquad \text{if $n \equiv m \pmod{2}$}\\
       -E_J(-2)^{-m'}\frac{1}{\sqrt{2}}\sin
       \left(\frac{2\pi\phi}{\phi_0}\right)\varphi_0^{2m'+1}\\
-      \quad{}*\sqrt{\frac{n'!}{(n'+2m'+1)!}}
+      \quad{}\times \sqrt{\frac{n'!}{(n'+2m'+1)!}}
       \exp\left(\frac{-\varphi_0^2}{4}\right)\\
-      \quad{}*L_{n'}^{2m'+1}\left(\frac{\varphi_0^2}{2}\right)
+      \quad{}\times L_{n'}^{2m'+1}\left(\frac{\varphi_0^2}{2}\right)
       \qquad\text{if $n \not\equiv m \pmod{2}$},
 \end{array}\right.
 \label{inner-V}
@@ -312,56 +310,43 @@ where
 and $L_n^\alpha$ is the generalized Laguerre polynomial.
 
 Eqn.~\eqref{inner-V} is a ghastly expression but straightforward to
-compute, so it and Eqn.~\eqref{inner-H0} specify $H$ entirely. As we did
-with the CPB, we can now truncate this Hamiltonian and approximate its
-eigenvalues numerically. Again as before, the y-axis and parameter
-values are given in gigahertz. Fig.~\ref{cpbl-theory} shows the
-spectrum calculated as a difference from the ground state and plotted
-with respect to magnetic flux, using a set of parameter values close
-to those that our lab has tested empirically.
+compute, so it and Eqn.~\eqref{inner-H0} specify $H$ entirely. As we
+did with the CPB, we can now truncate this Hamiltonian and approximate
+its eigenvalues numerically. Again, the y-axis and parameter values
+are given in gigahertz. Fig.~\ref{cpbl-theory} shows the spectrum
+calculated as a difference from the ground state and plotted with
+respect to magnetic flux, using a set of parameter values close to
+those that our lab has tested experimentally.
 
 \begin{figure} 
-\includegraphics[width=\figwidth]{CPBL-theory.png}
-\caption{ Energy spectrum for the CPBL. $E_C=2.5$, $E_J=8.8$, and
-  $E_L=0.5$. The y-axis and parameter values are in gigahertz, and the
-  x-axis is given in multiples of the base flux, $\phi_0$. (Recall
-  that Eqn.~\eqref{inner-V} is periodic in $\phi$.)}
+\includegraphics[width=\linewidth]{CPBL-theory.png}
+\caption{ Energy spectrum (difference from the ground state) for the
+  CPBL plotted against magnetic flux. $E_C=2.5$, $E_J=8.8$, and
+  $E_L=0.5$. The y-axis and parameter values are given in gigahertz,
+  and the x-axis is given in multiples of the base flux, $\phi_0$,
+  over one full period.}
 \label{cpbl-theory}
 \end{figure}
 
 \section{Experimental Data}
-Vladimir Manucharyan has been measuring the energy spectra of some of the
-first CPBL devices ever produced, and one of the goals of this project
+Vladimir Manucharyan has been measuring the energy spectra of the
+first CPBL device ever produced, and one of the goals of this project
 is to fit our theoretical spectra against his data. Energy curves were
 originally drawn from those data by hand, but a simple threshold
 filter can automate that process. Raw data (Figs.~\ref{raw-1} and
 \ref{raw-2}) can be filtered into sets of points suitable for fitting
 (Figs.~\ref{filter-1} and \ref{filter-2}).
 
-\begin{figure} 
-\includegraphics[width=\figwidth]{colorful-data.png}
-\caption{ Raw data displayed in Gnuplot. Though the parameters are not
-identical, the scale here is approximately a zoom on the central
-region of Fig.~\ref{cpbl-theory}.}
-\label{raw-1}
-\end{figure}
-
 \begin{figure}
-\includegraphics[width=\figwidth]{CPBL-color.png}
-\caption{ Raw data displayed in Gnuplot. For scale, the right half of
-  this plot is approximately the same region plotted in the whole of
-  Fig.~\ref{raw-1}. }
+\includegraphics[width=\linewidth]{CPBL-color.png}
+\caption{ Raw data. For scale, the near intersection on the bottom
+  right of the image corresponds to the near intersection in the
+  center of Fig.~\ref{cpbl-theory}. }
 \label{raw-2}
 \end{figure}
 
 \begin{figure}
-\includegraphics[width=\figwidth]{colorful-points.png}
-\caption{ Curves derived from the data in Fig.~\ref{raw-1} }
-\label{filter-1}
-\end{figure}
-
-\begin{figure}
-\includegraphics[width=\figwidth]{CPBL-data.png}
+\includegraphics[width=\linewidth]{CPBL-data.png}
 \caption{ Curves derived from the data in Fig.~\ref{raw-2} }
 \label{filter-2}
 \end{figure}
@@ -374,16 +359,16 @@ between it and the data point, and add together the squares of these
 differences. That is, for a given fit the badness, $B$, is defined as
 \begin{equation}
 \label{badness}
-B = \sum_{p \in \text{data}} (t-p)^2,
+B = \sum_{p \in \text{data}} (t(p)-p)^2,
 \end{equation}
-where $t$ is the closest point in the theoretical data set with the
+where $t(p)$ is the closest point in the theoretical data set with the
 same flux. We can then use generic multi-parameter minimization
 routines to find the best fitting values of $E_C$, $E_J$, and
-$E_L$.\cite{Byrd}\cite{Zhu} The results of this approach are displayed
+$E_L$\cite{Byrd}\cite{Zhu}. The results of this approach are displayed
 in Figs.~\ref{pre-fit} and \ref{post-fit}.
 
 \begin{figure}
-\includegraphics[width=\figwidth]{CPBL-prefit.png}
+\includegraphics[width=\linewidth]{CPBL-prefit.png}
 \caption{ An initial guess for parameter values plotted against
   experimental data from a portion of the set depicted in
   Fig.~\ref{raw-2}. This initial guess is clearly very poor, even
@@ -392,25 +377,24 @@ in Figs.~\ref{pre-fit} and \ref{post-fit}.
 \end{figure}
 
 \begin{figure}
-\includegraphics[width=\figwidth]{CPBL-postfit.png}
+\includegraphics[width=\linewidth]{CPBL-postfit.png}
 \caption{ The same data set from Fig.~\ref{pre-fit} after our
-  optimization routines adjusted the parameter values from that
+  optimization routines have adjusted the parameter values from the
   initial guess.}
 \label{post-fit}
 \end{figure}
 
-The only human input to the fit depicted in Fig.~\ref{post-fit} is the
-initial parameter guess and the identification of the zero-flux point
-on the x-axis. Note that the lines jutting out to the left and right
-of the bottom peak in that figure represent a transition between two
-non-ground states, and that the fit could be improved by plotting
-those transitions along with the ground state transitions. The line
-appearing clearly between the upper two spectral lines in that figure
-is not one of these transitions but rather a resonance from our
-experimental setup outside the CPBL itself, and it causes the nearby
-lines to deviate slightly from the theory. Cleaning out these
-extraneous points would improve the fit as well, though it would
-be difficult to automate.
+The only additional input to the fit depicted in Fig.~\ref{post-fit}
+is the initial parameter guess and the identification of the zero-flux
+point on the x-axis. Note that the lines jutting out to the left and
+right of the bottom peak in that figure represent a two-photon
+transition, and the fit could be improved by including those
+transitions. The line appearing clearly between the upper two spectral
+lines in that figure is not one of these transitions but rather a
+resonance from our experimental setup outside the CPBL itself, and it
+causes the nearby lines to deviate slightly from the theory. Cleaning
+out these extraneous points would improve the fit as well, though it
+would be difficult to automate.
 
 \section{Speeding it Up}
 
@@ -454,7 +438,7 @@ $\phi$. These optimizations altogether speed up a fitting operation by
 almost twenty times.
 
 We achieved a second major speedup by taking advantage of the
-capabilities of modern optimization algorithms.\cite{Byrd}\cite{Zhu}
+capabilities of modern optimization algorithms\cite{Byrd}\cite{Zhu}.
 Many of these algorithms calculate local partial derivatives in order
 to improve their search for minima. Without assistance, these routines
 can approximate local derivatives by evaluating several points in
@@ -471,9 +455,9 @@ the partial derivative for a given parameter $E_*$ is
 \begin{equation}
   \label{partials}
   \frac{\partial B}{\partial E_{*}} =
-  \sum_{p \in \text{data}}2(t-p)\frac{\partial t}{\partial E_*}.
+  \sum_{p \in \text{data}}2(t(p)-p)\frac{\partial t}{\partial E_*}.
 \end{equation}
-The values of $t$ are just differences among eigenvalues of $H$, so we
+The values of $t(p)$ are just differences among eigenvalues of $H$, so we
 need to calculate the derivatives of those eigenvalues. Just how to do
 that is not immediately obvious, but beginning with Schr\"odinger's
 equation, we can develop a very convenient intermediate result.
@@ -500,7 +484,7 @@ Multiply both sides by $\bra{\psi}$.
   \innerp{\psi}{E\frac{\partial}{\partial E_*}}{\psi}
 \end{multline}
 The $H$ in the second term comes out as a factor of $E$, and the third
-term collapses.
+term simplifies.
 \begin{equation}
   \innerp{\psi}{\frac{\partial H}{\partial E_*}}{\psi} +
   E\innerp{\psi}{\frac{\partial}{\partial E_*}}{\psi} =
@@ -509,7 +493,7 @@ term collapses.
 \end{equation}
 Finally, the two common terms cancel.
 \begin{equation}
-  \frac{\partial E}{E_*} =
+  \frac{\partial E}{\partial E_*} =
   \innerp{\psi}{\frac{\partial H}{\partial E_*}}{\psi}.
   \label{convenient}
 \end{equation}
@@ -578,51 +562,51 @@ to Jens Koch for his patient guidance.
 
 \begin{thebibliography}{9}
 \bibitem{Blais} A. Blais. ``Quantum information processing with
-  circuit quantum electrodynamics.'' arXiv:cond-mat/0402216v1. (7
-  February 2004)
+  circuit quantum electrodynamics.'' arXiv:cond-mat/0402216v1 (7
+  February 2004).
 
 \bibitem{Byrd} R. H. Byrd, P. Lu, and J. Nocedal. ``A Limited Memory
   Algorithm for Bound Constrained Optimization.'' \textit{SIAM Journal
     on Scientific and Statistical Computing} 16, 5,
-  pp. 1190-1208. (1995)
+  pp. 1190-1208 (1995).
   
 \bibitem{Feynman} R. P. Feynman, R. B. Leighton, and
   M. Sands. \textit{The Feynman Lectures on Physics}. Addison-Wesley
-  Publishing Company. Vol. 3, Ch. 21-9. (1963)
+  Publishing Company. Vol. 3, Ch. 21-9 (1963).
 
 \bibitem{Nakamura} Y. Nakamura et al. ``Coherent control of
   macroscopic quantum states in a single-Cooper-pair box.''
-  \textit{Nature} 398, pp. 786-788. (29 April 1999)
+  \textit{Nature} 398, pp. 786-788 (29 April 1999).
 
 \bibitem{Grover} L. K. Grover. ``A fast quantum mechanical algorithm
   for database search.'' \textit{Proceedings of the twenty-eighth
-    annual ACM symposium on theory of computing}, pp. 212-219. (1996)
+    annual ACM symposium on theory of computing}, pp. 212-219 (1996).
 
 \bibitem{Koch} J. Koch et al. ``Charge insensitive qubit design
-  derived from the Cooper pair box.'' arXiv:cond-mat/0703002v2. (28
-  February 2007)
+  derived from the Cooper pair box.'' arXiv:cond-mat/0703002v2 (28
+  February 2007).
 
 \bibitem{Shor} P. W. Shor. ``Polynomial-Time Algorithms for Prime
   Factorization and Discrete Logarithms on a Quantum Computer.''
-  \textit{SIAM Review}, Vol. 41, No. 2, pp. 303-332. (June 1999)
+  \textit{SIAM Review}, Vol. 41, No. 2, pp. 303-332 (June 1999).
 
 \bibitem{Vandersypen} L. Vandersypen et al. ``Experimental realization
   of Shor's quantum factoring algorithm using nuclear magnetic
-  resonance.'' \textit{Nature} 414, pp. 883-887. (20 December 2001)
+  resonance.'' \textit{Nature} 414, pp. 883-887 (20 December 2001).
 
 \bibitem{Vion} D. Vion et al. ``Manipulating the Quantum State of an
   Electrical Circuit.'' \textit{Science}, Vol. 3, No. 5569,
-  pp. 886-889. (3 May 2002)
+  pp. 886-889 (3 May 2002).
   
 \bibitem{Wallraff} A. Wallraff et al. ``Strong coupling of a single
   photon to a superconducting qubit using circuit quantum
-  electrodynamics.'' \textit{Nature} 431, pp. 162-167. (9 September
-  2004)
+  electrodynamics.'' \textit{Nature} 431, pp. 162-167 (9 September
+  2004).
 
 \bibitem{Zhu} C. Zhu, R. H. Byrd, and J. Nocedal. ``L-BFGS-B, FORTRAN
   routines for large scale bound constrained optimization.''
   \textit{ACM Transactions on Mathematical Software} Vol 23, Num. 4,
-  pp. 550 - 560. (1997)
+  pp. 550 - 560 (1997).
 
 \end{thebibliography}
 

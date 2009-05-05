@@ -176,7 +176,7 @@ def niceness( (EC,EJ,EL), genlags, fluxes, data, num_curves ):
 
     return (f, array((f_EC,f_EJ,f_EL)))
 
-def make_data( genlags, fluxes, EC, EJ, EL, num_curves ):
+def make_theory( genlags, fluxes, EC, EJ, EL, num_curves ):
     P = prehamiltonian( genlags, EC, EJ, EL )
     data = [ [ 0 for j in range(num_curves) ] for f in fluxes ]
     for i,flux in enumerate(fluxes):
@@ -185,20 +185,23 @@ def make_data( genlags, fluxes, EC, EJ, EL, num_curves ):
             data[i][j] = E[j][0]
     return data
 
-def plot_curves( xpoints, ycurves, bg=False ): # ycurves is a nested list
-    # at the moment, ycurves contains sorted lists of each yval
+def plot_theory( fluxes, theory, bg=True ): # theory is a nested list
+    # at the moment, theory contains lists of each yval
     # at a given flux (i.e. not lists representing continuous curves)
     picname = os.popen( "mktemp", "r" ).read()[:-1]
     grapher = os.popen( "gnuplot", "w" )
     grapher.write( "set key off\n" )
     grapher.write( "set terminal png\nset output '%s'\n" % picname )
+    grapher.write( "set xrange [%f:%f]\n" % (fluxes[0],fluxes[-1]) )
+    grapher.write( "set xlabel 'Magnetic flux'\n" )
+    grapher.write( "set ylabel 'Energy (GHz)'\n" )
     grapher.write( "plot '-' w l" )
-    for i in range(len(ycurves[0])-1):
+    for i in range(len(theory[0])-1):
         grapher.write( ", '-' w l" )
     grapher.write('\n' )
-    for curve in range(len(ycurves[0])):
-        for i,x in enumerate(xpoints):
-            grapher.write( "%f %f\n" % (x,ycurves[i][curve]) )
+    for curve in range(len(theory[0])):
+        for i,x in enumerate(fluxes):
+            grapher.write( "%f %f\n" % (x,theory[i][curve]) )
         grapher.write('e\n')
     grapher.close()
     sys.stderr.write( "Theory display: %s\n" % picname )
@@ -220,12 +223,14 @@ def read_data( file ):
 
     return (fluxes,data)
 
-def plot_data( fluxes, data, bg=False ):
+def plot_data( fluxes, data, bg=True ):
     picname = os.popen( "mktemp", "r" ).read()[:-1]
     grapher = os.popen( "gnuplot", "w" )
     grapher.write( "set key off\n" )
     grapher.write( "set terminal png\nset output '%s'\n" % picname )
     grapher.write( "set xrange [%f:%f]\n" % (fluxes[0],fluxes[-1]) )
+    grapher.write( "set xlabel 'Magnetic flux'\n" )
+    grapher.write( "set ylabel 'Energy (GHz)'\n" )
     grapher.write( "plot '-' with points lt 3 pt 0\n" )
     for i in range(len(fluxes)):
         for j in data[i]:
@@ -235,12 +240,14 @@ def plot_data( fluxes, data, bg=False ):
     sys.stderr.write( "Data display: %s\n" % picname )
     os.system( "display %s %s" % (picname, '&' if bg else '' ) )
 
-def plot_data_theory( fluxes, data, theory, bg=False ):
+def plot_data_theory( fluxes, data, theory, bg=True ):
     picname = os.popen( "mktemp", "r" ).read()[:-1]
     grapher = os.popen( "gnuplot", "w" )
     grapher.write( "set key off\n" )
     grapher.write( "set terminal png\nset output '%s'\n" % picname )
     grapher.write( "set xrange [%f:%f]\n" % (fluxes[0],fluxes[-1]) )
+    grapher.write( "set xlabel 'Magnetic flux'\n" )
+    grapher.write( "set ylabel 'Energy (GHz)'\n" )
     grapher.write( "plot '-' with points pt 2, " )
     grapher.write( "'-' with lines lw 3" )
     for i in range(len(theory[0])-1):
@@ -260,23 +267,34 @@ def plot_data_theory( fluxes, data, theory, bg=False ):
 
 def main():
 
-    # Gigahertz (factor of h)
-    EC = 2.5
-    EJ = 8.8
-    EL = 0.5
-
-    # Gigahertz (factor of h)
-    EC = 2.3
-    EJ = 9
-    EL = 0.6
-
     MATRIX_SIZE = 20
     NUM_ENERGIES = 3
     NUM_FLUXES = 20
 
     genlags = genlaguerre_array( MATRIX_SIZE )
 
+    # Gigahertz (factor of h)
+    # Approximate values for the experimental data. Overwritten below
+    # but kept here for a reference.
+    EC = 2.5
+    EJ = 8.8
+    EL = 0.5
+
+    ### Uncomment these to see a big theory plot before the theory+data plots
+    #tmpfluxes = [-0.5 + i/100. for i in range(100)]
+    #theory = make_theory( genlags, tmpfluxes, EC, EJ, EL, 5 )
+    #plot_theory( tmpfluxes, theory )
+
+    # Gigahertz (factor of h)
+    # Some less accurate guesses to test the algorithm, overwriting the previous
+    EC = 2.3
+    EJ = 9
+    EL = 0.6
+
     fluxes, data = read_data( sys.stdin )
+
+    ### Uncomment these to see a big data plot before the theory+data plots
+    #plot_data( fluxes, data )
 
     ### Isolate attractive section
 
@@ -293,8 +311,8 @@ def main():
     fluxes = [ fluxes[i] for i in range(len(fluxes)) if i%FACTOR==0 ]
     data = [ data[i] for i in range(len(data)) if i%FACTOR==0 ]
 
-    theory = make_data( genlags, fluxes, EC, EJ, EL, 3 )
-    plot_data_theory( fluxes, data, theory, True )
+    theory = make_theory( genlags, fluxes, EC, EJ, EL, 3 )
+    plot_data_theory( fluxes, data, theory )
 
     ret = fmin_l_bfgs_b( niceness, (EC,EJ,EL),
                          args = (genlags,fluxes,data,NUM_ENERGIES),
@@ -305,8 +323,8 @@ def main():
 
     print "EC = %f\nEJ = %f\nEL = %f" % (new_EC, new_EJ, new_EL)
 
-    new_theory = make_data( genlags, fluxes, new_EC, new_EJ, new_EL, 3 )
-    plot_data_theory( fluxes, data, new_theory, True )
+    new_theory = make_theory( genlags, fluxes, new_EC, new_EJ, new_EL, 3 )
+    plot_data_theory( fluxes, data, new_theory )
 
 if __name__=='__main__':
     main()
