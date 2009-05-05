@@ -38,70 +38,72 @@
 
 Quantum computing offers a number of enticing theoretical speedups
 over classical computers. Best known is Peter Shor's factoring
-algorithm, which can factor large composite numbers in polynomial
-time. This has the potential to break cryptographic schemes like RSA
-that rely on the intractability of the factoring problem. Another less
-dramatic but more widely applicable speedup is Grover's algorithm for
-searching an arbitrary space of $n$ elements in time $\mathcal{O}(n)$,
-a quadratic improvement over the classical case. These and other
-quantum algorithms have motivated significant research in the field of
-quantum computing.
+algorithm\cite{Shor}, which can factor large composite numbers in
+polynomial time. This has the potential to break cryptographic schemes
+like RSA that rely on the intractability of the factoring
+problem. Another less dramatic but more widely applicable speedup is
+Grover's algorithm for searching an arbitrary space of $n$ elements in
+time $\mathcal{O}(n)$, a quadratic improvement over the classical
+case\cite{Grover}. These and other quantum algorithms have motivated
+significant research in the field of quantum computing.
 
 The greatest obstacle to constructing a quantum computer has been
-creating the quantum bits (qubits) that store information in
-superposition. Any quantum system tends to decohere due to
-interactions with its environment, and a qubit has to meet two
-contradictory requirements. First, it must be sufficiently decoupled
-from its environment to hold its state long enough to perform
-meaningful computation. At the same time, though, it has to be coupled
-to its environment enough to be reliably measurable with the
-computation is finished. This is difficult enough that, at present,
-one of the largest quantum computations ever performed was the
-factorization of the number fifteen.\cite{Vandersypen}
+creating the quantum bits (qubits) that both store information
+reliably and allow that information to be manipulated. Any quantum
+system tends to decohere due to interactions with its environment, and
+a qubit has to meet two contradictory requirements. First, it must be
+sufficiently decoupled from its environment to hold its state long
+enough to perform meaningful computation. At the same time, though, it
+has to be coupled to its environment enough to be manipulable and
+eventually measurable with the computation is finished. This is
+difficult enough that, at present, one of the largest quantum
+computations ever performed was the factorization of the number
+fifteen.\cite{Vandersypen}
 
 One of the fields in which research is proceeding on this front is
-circuit quantum electrodynamics. Quantum circuits have several
-potential advantages over other forms of qubits. They sit on a chip
-rather than migrating through space, which greatly simplifies research
-compared to various atomic methods, and they can be manufactured using
-standard circuit printing techniques. More importantly, while atomic
-systems have fixed energy spectra, researchers can tune the parameters
-of their quantum circuits to produce artificial atoms with a range of
-different spectra.
+circuit quantum electrodynamics\cite{Blais}\cite{Wallraff}. Quantum
+circuits have several potential advantages over other forms of
+qubits. They are permanently stationary, which greatly simplifies
+research compared to various atomic methods, and they can be
+manufactured using standard circuit lithography techniques. More
+importantly, while atomic systems have fixed energy spectra,
+researchers can tune the parameters of their quantum circuits to
+produce artificial atoms with a range of different spectra.
 
 Computer models of these circuits can aid experimental research in
 several ways. Theoretical models of the device spectrum highlight
 extraneous or unexpected features in the data, and help to identify
 those features. Computer models can explore parameter regimes not yet
-probed by experiment, and they can do it in seconds rather than
-days. Also, in our case at least, the manufacturing processes for our
-circuits involve significant uncertainties. The insulating layer in a
-Josephson junction, for example, is formed by allowing an exposed
-layer of aluminum to oxidize. The thickness of the resulting oxide
-layer is highly variable, and it continues to grow after the circuit
-is already complete. For this and similar reasons, the design
-parameters of our circuits are unknown until we measure them against
-theoretical models.
+probed by experiment, and they can do it in seconds rather than days
+or weeks. Also, the manufacturing processes for our circuits typically
+involve significant uncertainties. The insulating layer in a Josephson
+junction, for example, is formed by allowing an exposed layer of
+aluminum to oxidize. The tunneling strength of that layer is
+exponentially sensitive to its thickness, and the layer continues to
+grow even after the circuit is complete. For this and similar reasons,
+the design parameters of our circuits are only known approximately
+until we measure them against theoretical models.
 
 \section{Modeling the Cooper Pair Box}
 
 \begin{figure}
-  \includegraphics[width=\figwidth]{CPB-circuit.png}
+  \includegraphics[width=.5\linewidth]{CPB-circuit.png}
   \caption{A diagram of the Cooper Pair Box. Note that $E_C$ and $E_J$
     are both parameters of the Josephson junction.}
   \label{cpb-circuit}
 \end{figure}
 
 One well-studied example of a quantum circuit is the Cooper Pair Box
-(CPB). See Fig.~\ref{cpb-circuit}. We used the basic CPB as an initial
-test of our modeling techniques, and we use it here as an introduction
-to the inductively-shunted Cooper pair box (CPBL). The CPB is a
-superconducting circuit with three components: a voltage source, a
-gate capacitor, and a Josephson junction.
+(CPB)\cite{Nakamura}\cite{Vion}. See Fig.~\ref{cpb-circuit}. We used
+the basic CPB as an initial test of our modeling techniques, and we
+use it here as an introduction to the inductively-shunted Cooper pair
+box (CPBL). The CPB is a superconducting circuit with three
+components: a voltage source, a gate capacitor, and a Josephson
+junction.
 
 \begin{figure}
-  \includegraphics[width=\figwidth]{junction.png}
-  \caption{ A Josephson junction }
+  \includegraphics[width=.5\linewidth]{junction.png}
+  \caption{ A sketch of a Josephson junction }
   \label{junction}
 \end{figure}
 
@@ -115,33 +117,33 @@ at sufficiently low temperatures the aluminum leads become
 superconducting. A Josephson junction acts like a capacitor across its
 insulating layer, but it also allows Cooper pairs of electrons to
 tunnel through. We can treat the Josephson junction as a capacitor and
-a tunneling junction in parallel, and we denote the capacitance and
-tunneling coefficient of these virtual components as $E_C$ and $E_J$,
-respectively.
+a tunneling junction in parallel, and we denote the energy scales
+corresponding to these components as $E_C$ and $E_J$, respectively.
 
-The capacitative properties of the Josephson junction, together with
-the gate capacitor, create a superconducting island in the CPB,
-indicated by the dotted line in Fig.~\ref{cpb-circuit}. This lets us
-treat the CPB in its ``charge basis,'' where each eigenstate denotes a
-number of Cooper pairs added to or removed from the island. In the
-charge basis, the Hamiltonian of the CPB is
+The Josephson tunnel junction, together with the gate capacitor,
+creates a superconducting island in the CPB, indicated by the dotted
+line in Fig.~\ref{cpb-circuit}. This lets us treat the CPB in its
+``charge basis,'' where each state denotes a number of Cooper pairs
+added to or removed from the island. In the charge basis, the
+Hamiltonian of the CPB is
 \begin{multline}
 \label{cpb-H}
   H_{\text{CPB}} = \sum_{n=-\infty}^{+\infty} \left(\frac{-E_J}{2}\left(
       \ket{n}\bra{n-1} + \ket{n-1}\bra{n} \right)\right. \\
   \left.\phantom{\frac{-E_J}{2}} + 4E_C(n-N_g)^2\ket{n}\bra{n}\right),
 \end{multline}
-where $n$ represents the number of tunneled electron pairs and $N_g$
-is the offset charge across the capacitor.
+where $n$ represents the number of tunneled Cooper pairs and $N_g$ is
+the offset charge across the capacitor, which is set by the gate
+voltage according to $N_g=\frac{C_gV_g}{2e}$.
 
 In order to calculate the energy spectrum of the CPB as a function of
-the offset charge, $N_g$, we will need to express $H_{\text{CPB}}$ as
-a matrix in the charge basis. Note that $H_{\text{CPB}}$ will be an
+the offset charge, we will need to express $H_{\text{CPB}}$ as a
+matrix in the charge basis. Note that $H_{\text{CPB}}$ will be an
 infinite matrix not just downward and rightward but, because $n$ and
 $m$ can take all integer values, leftward and upward as well. Each
 matrix element ${H_{\text{CPB}}}_{nm}$ is equal to the inner product
 $\innerp{n}{H_{\text{CPB}}}{m}$, so specifying those inner products
-specifies the matrix itself. Eqn.~\ref{cpb-H} gives us:
+specifies the matrix itself. Eqn.~\eqref{cpb-H} gives us:
 \begin{equation}
   \innerp{n}{H_{\text{CPB}}}{m} = 
   \begin{cases}
@@ -152,13 +154,13 @@ specifies the matrix itself. Eqn.~\ref{cpb-H} gives us:
 \end{equation}
 
 Truncating this tridiagonal matrix allows us to approximate its
-eigenvalues numerically. The eigenvalues depend only on the ratio
-between $E_J$ and $E_C$, and we can plot the energy spectra relative
-to $N_g$ for several values of this ratio in Figures \ref{cpb-1},
-\ref{cpb-10}, and \ref{cpb-30}. Units on the y-axis are in
-gigahertz. We can see that for values where $E_J$ is dominant
-(Fig.~\ref{cpb-1}) the spectrum looks like a series of parabolas,
-which results from the quadratic term on the diagonal of
+eigenvalues numerically. Up to an overall scale, the eigenvalues
+depend only on the ratio between $E_J$ and $E_C$, and we can plot the
+energy spectra relative to $N_g$ for several values of this ratio in
+Figs. \ref{cpb-1}, \ref{cpb-10}, and \ref{cpb-30}. Units on the
+y-axis are in gigahertz. We can see that for values where $E_C$ is
+dominant (Fig.~\ref{cpb-1}) the spectrum looks like a series of
+parabolas, which results from the quadratic term on the diagonal of
 $H_{\text{CPB}}$. For larger values the spectral lines smooth out and
 move apart, approaching a constant spacing.
 
@@ -177,42 +179,39 @@ move apart, approaching a constant spacing.
 \begin{figure}
   \includegraphics[width=\figwidth]{CPB-30.png}
   \caption{Energy spectrum vs. $N_g$ for the CPB with
-    $\frac{E_J}{E_c}=30$. Note that the divergences on the left and
-    right ends of each line are an artifact of the approximation
-    process, not of the theory itself. Extending the matrix cutoff
-    pushes these divergences farther out in $N_g$.}
+    $\frac{E_J}{E_c}=30$. Note that the deviations from periodicity on
+    the left and right ends of each line are artifacts of the
+    approximation process, not of the theory itself. Extending the
+    matrix cutoff pushes these deviations farther out in $N_g$.}
   \label{cpb-30}
 \end{figure}
 
 \section{Challenges with the CPB}
-As with all quantum circuits, one of the primary goals is to lengthen
-the time before decoherence. In the case of the CPB, one of the
+As with all quantum circuits, one of the primary goals is to obtain a
+device with long decoherence times. In the case of the CPB, one of the
 primary causes of decoherence is the charge noise---slow, randomly
 oscillating charges in the environment that introduce noise into the
 offset charge, $N_g$.
 
 Several strategies exist for mitigating the effects of charge noise in
-the CPB. One approach is to operate the device near local extrema of
-the energy spectrum. We can see in Fig.~\ref{cpb-1} that at certain
+the CPB. One approach is to operate the device near local
+extrema---the so-called ``sweet spots''---of the energy
+spectrum\cite{Vion}. We can see in Fig.~\ref{cpb-1} that at certain
 values of $N_g$ all of the spectral lines of the CPB reach local
-maxima or minima. In particular for that figure, the maxima of the
-ground level and the minima of the first excited state are both fairly
-smooth. When the CPB is operated at these points, the first order
-effects of charge noise drop out, though this technique is limited by
-the precision of $N_g$.
+maxima or minima. When the CPB is operated at these points, the first
+order effects of charge noise drop out.
 
 Another approach is to operate the CPB in the ``transmon'' region
-where $EJ\ll EC$. We can see in Fig.~\ref{cpb-30} that the spectral
-lines become very flat, reducing the effects of charge noise even
-further. One of the difficulties of working in the transmon region is
-that, as we mentioned earlier, the spacing between spectral lines
-becomes uniform. This makes the energy differences between states
-small integer multiples of one another. Because a qubit generally
-needs to be restricted to two energy states, this accessibility of the
-higher states can be a substantial problem.
+where $EJ\gg EC$\cite{Koch}. We can see in Fig.~\ref{cpb-30} that the
+spectral lines become very flat, reducing the effects of charge noise
+even further. One of the disadvantages of working in the transmon
+region is that, as we mentioned earlier, the spacing between spectral
+lines becomes nearly uniform. Because a qubit generally needs to be
+restricted to two energy states, this lack of anharmonicity can be a
+substantial problem.
 
 \begin{figure}
-  \includegraphics[width=\figwidth]{CPBL-circuit.png}
+  \includegraphics[width=.5\linewidth]{CPBL-circuit.png}
   \caption{ A diagram of the inductively shunted Cooper pair box
     (CPBL). The circuit now has three parameters, $E_C$ and $E_J$
     associated with the Josephson junction, and $E_L$ associated with
@@ -225,9 +224,9 @@ inductive shunt to the CPB (Fig.~\ref{CPBL-circuit}). The energy
 spectrum of the CPBL is entirely distinct from that of the CPB and
 worthy of study in its own right, but it is also much less sensitive
 to charge noise. This results from the fact that at low
-frequencies---that is, at the frequencies of charge noise---the
-inductor acts like a closed circuit and shunts those signals
-aside, while at high frequencies---like those of our input
+frequencies---that is, at the frequencies of substantial charge
+noise---the inductor acts like a closed circuit and shunts those
+signals, while at high frequencies---like those of our input
 voltages---the inductor approximates an open circuit, and the CPBL
 behaves similarly to the CPB.
 
@@ -237,7 +236,7 @@ Adding the inductor requires that we make several changes to our
 equations. First, since no superconducting island exists in the CPBL,
 the charge basis is no longer meaningful. We will instead use another
 basis from the CPB called the phase basis. The phase term arises from
-the Josephson equations. (See \cite{Feynman}.) Expressed in the phase
+the Josephson equations (see \cite{Feynman}). Expressed in the phase
 basis, the Hamiltonian of the CPB takes the form
 \begin{equation}
   H_{\text{CPB}} = -4E_C\frac{d^2}{d\varphi^2}-E_J\cos{\varphi}.
@@ -253,9 +252,9 @@ inductor to $H_{\text{CPB}}$, producing the Hamiltonian
   E_L\left(\varphi-\frac{2\pi\phi}{\phi_0} \right)^2.
 \end{equation}
 This equation also introduces a third design parameter for the CPBL,
-the strength of the inductor, $E_L$. In order to analyze this
-equation, we will immediately adopt a change of variables, $\varphi
-\rightarrow (\varphi + \frac{2\pi\phi}{\phi_0})$.
+the inductive energy, $E_L$. In order to analyze this equation, we
+will immediately adopt a change of variables, $\varphi \rightarrow
+(\varphi + \frac{2\pi\phi}{\phi_0})$.
 \begin{equation}
   \label{H}
   H = -4E_C\frac{d^2}{d\varphi^2}-E_J\cos\left(\varphi+
@@ -264,11 +263,11 @@ equation, we will immediately adopt a change of variables, $\varphi
 \end{equation}
 After the change we can see that, apart from the cosine term in the
 middle, $H$ takes the form of a simple harmonic oscillator (SHO). It
-will therefore be convenient to approximate $H$ in the harmonic
-oscillator basis over $\varphi$. Note that this is again a discrete
-basis, though unlike the CPB, its matrix form extends infinitely only
-in the two conventional directions. To facilitate calculations in this
-basis, we separate $H$ into two pieces:
+will therefore be convenient to express $H$ in the harmonic oscillator
+basis over $\varphi$. Note that this is again a discrete basis, though
+unlike the CPB, its matrix form extends infinitely only in the two
+conventional directions. To facilitate calculations in this basis, we
+separate $H$ into two pieces:
 \begin{align}
   H & = H_0 + V\\
   H_0 & = -4E_C\frac{d^2}{d\varphi^2} +
@@ -281,7 +280,7 @@ us that
 \begin{equation}
   \innerp{n}{H_0}{m} = 
   \begin{cases}
-    \sqrt{8E_LE_C}\left(\frac{n+1}{2}\right) & \text{if $n=m$} \\
+    \sqrt{8E_LE_C}\left(n+\frac{1}{2}\right) & \text{if $n=m$} \\
     0 & \text{otherwise.}
   \end{cases}
   \label{inner-H0}
@@ -312,8 +311,8 @@ where
 \end{align}
 and $L_n^\alpha$ is the generalized Laguerre polynomial.
 
-Eqn.~\ref{inner-V} is a ghastly expression but straightforward to
-compute, so it and Eqn.~\ref{inner-H0} specify $H$ entirely. As we did
+Eqn.~\eqref{inner-V} is a ghastly expression but straightforward to
+compute, so it and Eqn.~\eqref{inner-H0} specify $H$ entirely. As we did
 with the CPB, we can now truncate this Hamiltonian and approximate its
 eigenvalues numerically. Again as before, the y-axis and parameter
 values are given in gigahertz. Fig.~\ref{cpbl-theory} shows the
@@ -326,7 +325,7 @@ to those that our lab has tested empirically.
 \caption{ Energy spectrum for the CPBL. $E_C=2.5$, $E_J=8.8$, and
   $E_L=0.5$. The y-axis and parameter values are in gigahertz, and the
   x-axis is given in multiples of the base flux, $\phi_0$. (Recall
-  that Eqn.~\ref{inner-V} is periodic in $\phi$.)}
+  that Eqn.~\eqref{inner-V} is periodic in $\phi$.)}
 \label{cpbl-theory}
 \end{figure}
 
@@ -444,7 +443,7 @@ procedure.
 
 A similar speedup results from the fact that in all of
 Eqns.~\ref{inner-H0} and \ref{inner-V}, only two terms in
-Eqn.~\ref{inner-V} depend on the value of $\phi$. Thus the majority of
+Eqn.~\eqref{inner-V} depend on the value of $\phi$. Thus the majority of
 work needed to assemble $H$ can be done once for each trial of the
 parameters $E_C$, $E_J$, and $E_L$, rather than for every value of
 $\phi$ plotted within that trial. That leaves only one trigonometric
@@ -467,7 +466,7 @@ partial derivatives of the badness of fit in parallel with the fit
 itself. As one might expect, calculating the derivatives this way
 avoids lots of duplicated effort.
 
-Recalling our definition of ``badness of fit'' in Eqn.~\ref{badness},
+Recalling our definition of ``badness of fit'' in Eqn.~\eqref{badness},
 the partial derivative for a given parameter $E_*$ is
 \begin{equation}
   \label{partials}
@@ -514,10 +513,10 @@ Finally, the two common terms cancel.
   \innerp{\psi}{\frac{\partial H}{\partial E_*}}{\psi}.
   \label{convenient}
 \end{equation}
-Eqn.~\ref{convenient} leaves us with a very convenient formula for
+Eqn.~\eqref{convenient} leaves us with a very convenient formula for
 calculating the partial derivatives of the eigenenergies of $H$.
 
-Now, going back to Eqn.~\ref{H}, we see that
+Now, going back to Eqn.~\eqref{H}, we see that
 \begin{align}
   \label{dC}
   \frac{\partial H}{\partial E_C} &= -4\frac{\partial}{\partial
@@ -531,7 +530,7 @@ Now, going back to Eqn.~\ref{H}, we see that
 Our eigenvalue routines can give us the eigenvectors $\ket{\psi}$
 associated with each eigenvalue $E$ with little additional effort. In
 the case of $\partial H/\partial E_J$, we have already calculated the
-matrix form of Eqn.~\ref{dJ}, namely the matrix $V$ without the extra
+matrix form of Eqn.~\eqref{dJ}, namely the matrix $V$ without the extra
 factor of $-E_J$, and taking the inner product of that matrix with
 $\ket{\psi}$ gives us $\frac{\partial E}{\partial E_J}$.
 
@@ -548,8 +547,8 @@ faster to just apply the raising and lowering operators explicitly to
 each eigenvector and dot the result with the original eigenvector.
 
 Finally, we just sum up the partial derivatives using
-Eqn.~\ref{partials} just as we sum up the result with
-Eqn.~\ref{badness}. Calculating the derivatives ourselves, rather than
+Eqn.~\eqref{partials} just as we sum up the result with
+Eqn.~\eqref{badness}. Calculating the derivatives ourselves, rather than
 approximating them with extra function calls, nets us another speedup
 of nearly a factor of four.
 
@@ -572,10 +571,16 @@ developed will prove useful for implementing future models of the CPBL
 and other systems.
 
 \section{Acknowledgements}
-Thanks to Jens Koch, Steven Girvin, Vladimir Manucharyan, Lev Bishop,
-Rob Schoelkopf, and Michel Devoret.
+Thanks to Steven Girvin, Luigi Frunzio, and Lev Bishop for discussions
+about this project, to Vladimir Manucharyan, Rob Schoelkopf, and
+Michel Devoret for the data we analyzed in this paper, and especially
+to Jens Koch for his patient guidance.
 
 \begin{thebibliography}{9}
+\bibitem{Blais} A. Blais. ``Quantum information processing with
+  circuit quantum electrodynamics.'' arXiv:cond-mat/0402216v1. (7
+  February 2004)
+
 \bibitem{Byrd} R. H. Byrd, P. Lu, and J. Nocedal. ``A Limited Memory
   Algorithm for Bound Constrained Optimization.'' \textit{SIAM Journal
     on Scientific and Statistical Computing} 16, 5,
@@ -585,10 +590,35 @@ Rob Schoelkopf, and Michel Devoret.
   M. Sands. \textit{The Feynman Lectures on Physics}. Addison-Wesley
   Publishing Company. Vol. 3, Ch. 21-9. (1963)
 
+\bibitem{Nakamura} Y. Nakamura et al. ``Coherent control of
+  macroscopic quantum states in a single-Cooper-pair box.''
+  \textit{Nature} 398, pp. 786-788. (29 April 1999)
+
+\bibitem{Grover} L. K. Grover. ``A fast quantum mechanical algorithm
+  for database search.'' \textit{Proceedings of the twenty-eighth
+    annual ACM symposium on theory of computing}, pp. 212-219. (1996)
+
+\bibitem{Koch} J. Koch et al. ``Charge insensitive qubit design
+  derived from the Cooper pair box.'' arXiv:cond-mat/0703002v2. (28
+  February 2007)
+
+\bibitem{Shor} P. W. Shor. ``Polynomial-Time Algorithms for Prime
+  Factorization and Discrete Logarithms on a Quantum Computer.''
+  \textit{SIAM Review}, Vol. 41, No. 2, pp. 303-332. (June 1999)
+
 \bibitem{Vandersypen} L. Vandersypen et al. ``Experimental realization
   of Shor's quantum factoring algorithm using nuclear magnetic
   resonance.'' \textit{Nature} 414, pp. 883-887. (20 December 2001)
+
+\bibitem{Vion} D. Vion et al. ``Manipulating the Quantum State of an
+  Electrical Circuit.'' \textit{Science}, Vol. 3, No. 5569,
+  pp. 886-889. (3 May 2002)
   
+\bibitem{Wallraff} A. Wallraff et al. ``Strong coupling of a single
+  photon to a superconducting qubit using circuit quantum
+  electrodynamics.'' \textit{Nature} 431, pp. 162-167. (9 September
+  2004)
+
 \bibitem{Zhu} C. Zhu, R. H. Byrd, and J. Nocedal. ``L-BFGS-B, FORTRAN
   routines for large scale bound constrained optimization.''
   \textit{ACM Transactions on Mathematical Software} Vol 23, Num. 4,
