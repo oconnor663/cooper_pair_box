@@ -1,4 +1,4 @@
-\documentclass[12pt]{revtex4}
+\documentclass[twocolumn]{revtex4}
 
 \usepackage{graphicx,amsmath}
 
@@ -15,21 +15,21 @@
 
 \title{Artificial Atoms: Modeling the Inductively-Shunted Cooper Pair
   Box}
-\author{John O'Connor, Jens Koch, Steven Girvin, Vlad Manucharyan, Lev
-  Bishop, Schoelkopf et al, Devoret et al}
+\author{John O'Connor}
 
 \begin{abstract}
   The Cooper pair box (CPB) is a well-studied quantum circuit that can
   function as an artificial atom. The inductively-shunted Cooper pair
   box (CPBL) is much less well-studied. Adding an inductive shunt
-  promises to mitigate ambient charge noise around the circuit, but it
-  also produces a Hamiltonian with completely different
-  characteristics. The first examples of these circuits are being
-  studied by Vlad Manucharyan, and while computer models of the energy
-  spectrum for these circuits exist, faster models would be more
-  helpful in interpreting the experimental data. We develop a computer
-  model of the CPBL that is fast enough to run curve fitting on
-  experimental data, and demonstrate the results of this model.
+  reduces the sensitivity of the device to ambient charge noise around
+  the circuit, but it also produces a Hamiltonian with completely
+  different characteristics. The first examples of these circuits are
+  being studied in Michel Devoret's lab by Vladimir Manucharyan.
+  While computer models of the energy spectrum for these circuits
+  exist, faster algorithms would be helpful in interpreting the
+  experimental data more efficiently. We develop a computer model of
+  the CPBL that is fast enough to run curve fitting on experimental
+  data, and demonstrate the results of this model.
 \end{abstract}
 
 \maketitle
@@ -39,13 +39,13 @@
 Quantum computing offers a number of enticing theoretical speedups
 over classical computers. Best known is Peter Shor's factoring
 algorithm, which can factor large composite numbers in polynomial
-time. This has the potential to break popular cryptographic schemes
-like RSA that rely on the intractability of the factoring
-problem. Another less dramatic but more widely applicable speedup is
-Grover's algorithm for searching an arbitrary space of $n$ elements in
-time $O(n)$, a quadratic improvement over the classical case. These
-and other quantum algorithms have motivated significant research in
-the field of quantum computing.
+time. This has the potential to break cryptographic schemes like RSA
+that rely on the intractability of the factoring problem. Another less
+dramatic but more widely applicable speedup is Grover's algorithm for
+searching an arbitrary space of $n$ elements in time $\mathcal{O}(n)$,
+a quadratic improvement over the classical case. These and other
+quantum algorithms have motivated significant research in the field of
+quantum computing.
 
 The greatest obstacle to constructing a quantum computer has been
 creating the quantum bits (qubits) that store information in
@@ -331,7 +331,7 @@ to those that our lab has tested empirically.
 \end{figure}
 
 \section{Experimental Data}
-Vlad Manucharyan has been measuring the energy spectra of some of the
+Vladimir Manucharyan has been measuring the energy spectra of some of the
 first CPBL devices ever produced, and one of the goals of this project
 is to fit our theoretical spectra against his data. Energy curves were
 originally drawn from those data by hand, but a simple threshold
@@ -566,11 +566,14 @@ the algorithmics and in the mathematics of the CPBL model. At this
 point, our code can fit a complete data set in one to two minutes, and
 thinning out the data can bring that time down to about fifteen
 seconds without significantly affecting the accuracy of the fit. We
-hope that our code will be useful to Vlad Manucharyan and others as
+hope that our code will be useful to Vladimir Manucharyan and others as
 they continue to explore the CPBL, and that the techniques we
 developed will prove useful for implementing future models of the CPBL
 and other systems.
 
+\section{Acknowledgements}
+Thanks to Jens Koch, Steven Girvin, Vladimir Manucharyan, Lev Bishop,
+Rob Schoelkopf, and Michel Devoret.
 
 \begin{thebibliography}{9}
 \bibitem{Byrd} R. H. Byrd, P. Lu, and J. Nocedal. ``A Limited Memory
