@@ -20,13 +20,12 @@ def hamiltonian(radius,ng,EJoverEC):
 
 def make_plot( image_name, tmp_names, EJoverEC ):
     out = os.popen( "gnuplot", "w" )
-    out.write( "set terminal png \n set output '%s'\n" % image_name )
+    out.write( "set terminal png enhanced font '/usr/share/fonts/truetype/freefont/FreeSerif.ttf' 14\n" )
+    out.write( "set output '%s'\n" % image_name )
     out.write( "set xlabel 'Offset charge (2e)'\n" )
     out.write( "set ylabel 'Energy (GHz)'\n" )
     out.write( "set key off \n" )
-    out.write( "set title 'Ej/Ec = %.2f' \n" % EJoverEC )
-    out.write( "set yrange [-30:30] \n" )
-
+    out.write( "set title 'E_J/E_C = %.2f' \n" % EJoverEC )
     plot_command = "plot '%s' with lines" % tmp_names[0]
     for i in tmp_names[1:]:
         plot_command += ", '%s' with lines" % i

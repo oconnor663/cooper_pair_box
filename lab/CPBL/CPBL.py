@@ -191,10 +191,11 @@ def plot_theory( fluxes, theory, bg=True ): # theory is a nested list
     picname = os.popen( "mktemp", "r" ).read()[:-1]
     grapher = os.popen( "gnuplot", "w" )
     grapher.write( "set key off\n" )
-    grapher.write( "set terminal png\nset output '%s'\n" % picname )
+    grapher.write( "set terminal png enhanced font '/usr/share/fonts/truetype/freefont/FreeSerif.ttf' 14\n" )
+    grapher.write( "set output '%s'\n" % picname )
     grapher.write( "set xrange [%f:%f]\n" % (fluxes[0],fluxes[-1]) )
-    grapher.write( "set xlabel 'Magnetic flux'\n" )
-    grapher.write( "set ylabel 'Energy (GHz)'\n" )
+    grapher.write( u"set xlabel 'Magnetic flux (\u03a6_0)'\n"
+                   "set ylabel 'Energy (GHz)'\n".encode("utf-8"))
     grapher.write( "plot '-' w l" )
     for i in range(len(theory[0])-1):
         grapher.write( ", '-' w l" )
@@ -224,13 +225,23 @@ def read_data( file ):
     return (fluxes,data)
 
 def plot_data( fluxes, data, bg=True ):
+    ymin = None
+    ymax = None
+    for col in data:
+        for val in col:
+            if ymin==None or val<ymin:
+                ymin = val
+            if ymax==None or val>ymax:
+                ymax = val
     picname = os.popen( "mktemp", "r" ).read()[:-1]
     grapher = os.popen( "gnuplot", "w" )
     grapher.write( "set key off\n" )
-    grapher.write( "set terminal png\nset output '%s'\n" % picname )
+    grapher.write( "set terminal png enhanced font '/usr/share/fonts/truetype/freefont/FreeSerif.ttf' 14\n" )
+    grapher.write( "set output '%s'\n" % picname )
     grapher.write( "set xrange [%f:%f]\n" % (fluxes[0],fluxes[-1]) )
-    grapher.write( "set xlabel 'Magnetic flux'\n" )
-    grapher.write( "set ylabel 'Energy (GHz)'\n" )
+    grapher.write( "set yrange [%f:%f]\n" % (ymin,ymax) )
+    grapher.write( u"set xlabel 'Magnetic flux (\u03a6_0)'\n"
+                   "set ylabel 'Energy (GHz)'\n".encode("utf-8"))
     grapher.write( "plot '-' with points lt 3 pt 0\n" )
     for i in range(len(fluxes)):
         for j in data[i]:
@@ -244,10 +255,11 @@ def plot_data_theory( fluxes, data, theory, bg=True ):
     picname = os.popen( "mktemp", "r" ).read()[:-1]
     grapher = os.popen( "gnuplot", "w" )
     grapher.write( "set key off\n" )
-    grapher.write( "set terminal png\nset output '%s'\n" % picname )
+    grapher.write( "set terminal png enhanced font '/usr/share/fonts/truetype/freefont/FreeSerif.ttf' 14\n" )
+    grapher.write( "set output '%s'\n" % picname )
     grapher.write( "set xrange [%f:%f]\n" % (fluxes[0],fluxes[-1]) )
-    grapher.write( "set xlabel 'Magnetic flux'\n" )
-    grapher.write( "set ylabel 'Energy (GHz)'\n" )
+    grapher.write( u"set xlabel 'Magnetic flux (\u03a6_0)'\n"
+                   "set ylabel 'Energy (GHz)'\n".encode("utf-8"))
     grapher.write( "plot '-' with points pt 2, " )
     grapher.write( "'-' with lines lw 3" )
     for i in range(len(theory[0])-1):
@@ -281,9 +293,9 @@ def main():
     EL = 0.5
 
     ### Uncomment these to see a big theory plot before the theory+data plots
-    #tmpfluxes = [-0.5 + i/100. for i in range(100)]
-    #theory = make_theory( genlags, tmpfluxes, EC, EJ, EL, 5 )
-    #plot_theory( tmpfluxes, theory )
+    tmpfluxes = [-0.5 + i/100. for i in range(100)]
+    theory = make_theory( genlags, tmpfluxes, EC, EJ, EL, 5 )
+    plot_theory( tmpfluxes, theory )
 
     # Gigahertz (factor of h)
     # Some less accurate guesses to test the algorithm, overwriting the previous
@@ -294,7 +306,8 @@ def main():
     fluxes, data = read_data( sys.stdin )
 
     ### Uncomment these to see a big data plot before the theory+data plots
-    #plot_data( fluxes, data )
+    ### Note that the make_raw_png script may fare better on the yrange
+    plot_data( fluxes, data )
 
     ### Isolate attractive section
 

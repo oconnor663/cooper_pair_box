@@ -36,14 +36,14 @@
 
 Quantum computing offers a number of enticing theoretical speedups
 over classical computers. Best known is Peter Shor's factoring
-algorithm\cite{Shor}, which can factor large composite numbers in
-polynomial time. This has the potential to break cryptographic schemes
-like RSA that rely on the intractability of the factoring
-problem. Another less dramatic but more widely applicable speedup is
-Grover's algorithm for searching an arbitrary space of $n$ elements in
-time $\mathcal{O}(n)$, a quadratic improvement over the classical
-case\cite{Grover}. These and other quantum algorithms have motivated
-significant research in the field of quantum computing.
+algorithm \cite{Shor}, which can factor large integers in polynomial
+time. This has the potential to break cryptographic schemes like RSA
+that rely on the intractability of the factoring problem. Another less
+dramatic but more widely applicable speedup is Grover's algorithm for
+searching an arbitrary space of $n$ elements in time $\mathcal{O}(n)$,
+a quadratic improvement over the classical case \cite{Grover}. These
+and other quantum algorithms have motivated significant research in
+the field of quantum computing.
 
 The greatest obstacle to constructing a quantum computer has been
 creating the quantum bits (qubits) that both store information
@@ -53,13 +53,13 @@ a qubit has to meet two contradictory requirements. First, it must be
 sufficiently decoupled from its environment to hold its state long
 enough to perform meaningful computation. At the same time, though, it
 has to be coupled to its environment enough to be manipulable and
-eventually measurable with the computation is finished. This is
+eventually measurable when the computation is finished. This is
 difficult enough that, at present, one of the largest quantum
 computations ever performed was the factorization of the number
-fifteen.\cite{Vandersypen}
+fifteen \cite{Vandersypen}.
 
 One of the fields in which research is proceeding on this front is
-circuit quantum electrodynamics\cite{Blais}\cite{Wallraff}. Quantum
+circuit quantum electrodynamics \cite{Blais,Wallraff}. Quantum
 circuits have several potential advantages over other forms of
 qubits. They are permanently stationary, which greatly simplifies
 research compared to various atomic methods, and they can be
@@ -92,7 +92,7 @@ until we measure them against theoretical models.
 \end{figure}
 
 One well-studied example of a quantum circuit is the Cooper Pair Box
-(CPB)\cite{Nakamura}\cite{Vion}. See Fig.~\ref{cpb-circuit}. We used
+(CPB)\cite{Nakamura,Vion}, see Fig.~\ref{cpb-circuit}. We used
 the basic CPB as an initial test of our modeling techniques, and we
 use it here as an introduction to the inductively-shunted Cooper pair
 box (CPBL). The CPB is a superconducting circuit with three
@@ -100,7 +100,7 @@ components: a voltage source, a gate capacitor, and a Josephson
 junction.
 
 \begin{figure}
-  \includegraphics[width=.5\linewidth]{junction.png}
+  \includegraphics[width=.66\linewidth]{junction.png}
   \caption{ A sketch of a Josephson junction }
   \label{junction}
 \end{figure}
@@ -194,28 +194,19 @@ offset charge, $N_g$.
 Several strategies exist for mitigating the effects of charge noise in
 the CPB. One approach is to operate the device near local
 extrema---the so-called ``sweet spots''---of the energy
-spectrum\cite{Vion}. We can see in Fig.~\ref{cpb-1} that at certain
+spectrum \cite{Vion}. We can see in Fig.~\ref{cpb-1} that at certain
 values of $N_g$ all of the spectral lines of the CPB reach local
 maxima or minima. When the CPB is operated at these points, the first
 order effects of charge noise drop out.
 
 Another approach is to operate the CPB in the ``transmon'' region
-where $EJ\gg EC$\cite{Koch}. We can see in Fig.~\ref{cpb-30} that the
+where $E_J\gg E_C$ \cite{Koch}. We can see in Fig.~\ref{cpb-30} that the
 spectral lines become very flat, reducing the effects of charge noise
 even further. One of the disadvantages of working in the transmon
 region is that, as we mentioned earlier, the spacing between spectral
 lines becomes nearly uniform. Because a qubit generally needs to be
 restricted to two energy states, this lack of anharmonicity can be a
 substantial problem.
-
-\begin{figure}
-  \includegraphics[width=.5\linewidth]{CPBL-circuit.png}
-  \caption{ A diagram of the inductively shunted Cooper pair box
-    (CPBL). The circuit now has three parameters, $E_C$ and $E_J$
-    associated with the Josephson junction, and $E_L$ associated with
-    the inductor.}
-  \label{CPBL-circuit}
-\end{figure}
 
 A third option---the option that we explore here---is to add an
 inductive shunt to the CPB (Fig.~\ref{CPBL-circuit}). The energy
@@ -230,9 +221,19 @@ behaves similarly to the CPB.
 
 \section{Modeling the Inductively Shunted Cooper Pair Box}
 
+\begin{figure}
+  \includegraphics[width=.5\linewidth]{CPBL-circuit.png}
+  \caption{ A diagram of the inductively shunted Cooper pair box
+    (CPBL). The circuit now has three parameters, $E_C$ and $E_J$
+    associated with the Josephson junction, and $E_L$ associated with
+    the inductor. An external magnetic field creates a tunable
+    magnetic flux, $\Phi$, through the superconducting loop.}
+  \label{CPBL-circuit}
+\end{figure}
+
 Adding the inductor requires that we make several changes to our
 equations. First, since no superconducting island exists in the CPBL,
-the charge basis is no longer meaningful. We will instead use another
+the charge basis is no longer discrete. We will instead use another
 basis from the CPB called the phase basis. The phase term arises from
 the Josephson equations (see \cite{Feynman}). Expressed in the phase
 basis, the Hamiltonian of the CPB takes the form
@@ -242,21 +243,22 @@ basis, the Hamiltonian of the CPB takes the form
 
 Another consequence of the missing island is that no offset charge can
 exist on the CPBL, and so we will instead plot the energy spectrum
-with respect to $\phi$, the magnetic flux through our inductor. The
-$\phi$ parameter comes into the picture when we add the term for our
+with respect to $\Phi$, the magnetic flux through our inductor. The
+$\Phi$ parameter comes into the picture when we add the term for our
 inductor to $H_{\text{CPB}}$, producing the Hamiltonian
 \begin{equation}
   H = -4E_C\frac{d^2}{d\varphi^2}-E_J\cos{\varphi}+\frac{1}{2}
-  E_L\left(\varphi-\frac{2\pi\phi}{\phi_0} \right)^2.
+  E_L\left(\varphi-\frac{2\pi\Phi}{\Phi_0} \right)^2,
 \end{equation}
-This equation also introduces a third design parameter for the CPBL,
-the inductive energy, $E_L$. In order to analyze this equation, we
-will immediately adopt a change of variables, $\varphi \rightarrow
-(\varphi + \frac{2\pi\phi}{\phi_0})$.
+where $\Phi_0$ is the magnetic flux quantum, $\Phi_0 = h/2e$. This
+equation also introduces a third design parameter for the CPBL, the
+inductive energy, $E_L$. In order to analyze this equation, we will
+immediately adopt a change of variables, $\varphi \rightarrow (\varphi
++ \frac{2\pi\Phi}{\Phi_0})$.
 \begin{equation}
   \label{H}
   H = -4E_C\frac{d^2}{d\varphi^2}-E_J\cos\left(\varphi+
-    \frac{2\pi\phi}{\phi_0}\right)+
+    \frac{2\pi\Phi}{\Phi_0}\right)+
   \frac{1}{2} E_L\varphi^2.
 \end{equation}
 After the change we can see that, apart from the cosine term in the
@@ -270,7 +272,7 @@ separate $H$ into two pieces:
   H & = H_0 + V\\
   H_0 & = -4E_C\frac{d^2}{d\varphi^2} +
   \frac{1}{2} E_L\varphi^2 \\
-  V & = -E_J\cos\left(\varphi + \frac{2\pi\phi}{\phi_0}\right).
+  V & = -E_J\cos\left(\varphi + \frac{2\pi\Phi}{\Phi_0}\right).
 \end{align}
 Simply substituting the coefficients in $H_0$ into the SHO equations,
 with $\ket{n}$ now referring to SHO basis states over $\varphi$, gives
@@ -287,13 +289,13 @@ The inner product with $V$, on the other hand, requires a fairly
 complicated integral. The result is
 \begin{equation}
   \innerp{n}{V}{m} = \left\{\begin{array}{l}
-      -E_J(-2)^{-m'}\cos\left(\frac{2\pi\phi}{\phi_0}\right)\varphi_0^{2m'}\\
+      -E_J(-2)^{-m'}\cos\left(\frac{2\pi\Phi}{\Phi_0}\right)\varphi_0^{2m'}\\
       \quad{}\times \sqrt{\frac{n'!}{(n'+2m')!}}
       \exp\left(\frac{-\varphi_0^2}{4}\right)\\
       \quad{}\times L_{n'}^{2m'}\left(\frac{\varphi_0^2}{2}\right)
       \phantom{{}^{{}+1}}\qquad \text{if $n \equiv m \pmod{2}$}\\
       -E_J(-2)^{-m'}\frac{1}{\sqrt{2}}\sin
-      \left(\frac{2\pi\phi}{\phi_0}\right)\varphi_0^{2m'+1}\\
+      \left(\frac{2\pi\Phi}{\Phi_0}\right)\varphi_0^{2m'+1}\\
       \quad{}\times \sqrt{\frac{n'!}{(n'+2m'+1)!}}
       \exp\left(\frac{-\varphi_0^2}{4}\right)\\
       \quad{}\times L_{n'}^{2m'+1}\left(\frac{\varphi_0^2}{2}\right)
@@ -312,8 +314,7 @@ and $L_n^\alpha$ is the generalized Laguerre polynomial.
 Eqn.~\eqref{inner-V} is a ghastly expression but straightforward to
 compute, so it and Eqn.~\eqref{inner-H0} specify $H$ entirely. As we
 did with the CPB, we can now truncate this Hamiltonian and approximate
-its eigenvalues numerically. Again, the y-axis and parameter values
-are given in gigahertz. Fig.~\ref{cpbl-theory} shows the spectrum
+its eigenvalues numerically. Fig.~\ref{cpbl-theory} shows the spectrum
 calculated as a difference from the ground state and plotted with
 respect to magnetic flux, using a set of parameter values close to
 those that our lab has tested experimentally.
@@ -323,33 +324,33 @@ those that our lab has tested experimentally.
 \caption{ Energy spectrum (difference from the ground state) for the
   CPBL plotted against magnetic flux. $E_C=2.5$, $E_J=8.8$, and
   $E_L=0.5$. The y-axis and parameter values are given in gigahertz,
-  and the x-axis is given in multiples of the base flux, $\phi_0$,
+  and the x-axis is given in multiples of the flux quantum, $\Phi_0$,
   over one full period.}
 \label{cpbl-theory}
 \end{figure}
 
 \section{Experimental Data}
-Vladimir Manucharyan has been measuring the energy spectra of the
-first CPBL device ever produced, and one of the goals of this project
-is to fit our theoretical spectra against his data. Energy curves were
-originally drawn from those data by hand, but a simple threshold
-filter can automate that process. Raw data (Figs.~\ref{raw-1} and
-\ref{raw-2}) can be filtered into sets of points suitable for fitting
-(Figs.~\ref{filter-1} and \ref{filter-2}).
-
 \begin{figure}
 \includegraphics[width=\linewidth]{CPBL-color.png}
-\caption{ Raw data. For scale, the near intersection on the bottom
-  right of the image corresponds to the near intersection in the
-  center of Fig.~\ref{cpbl-theory}. }
-\label{raw-2}
+\caption{ Raw data from Vladimir Manucharyan. For scale, the avoided
+  crossing on the bottom right of the image corresponds to the avoided
+  crossing in the center of Fig.~\ref{cpbl-theory}. }
+\label{raw}
 \end{figure}
 
 \begin{figure}
 \includegraphics[width=\linewidth]{CPBL-data.png}
-\caption{ Curves derived from the data in Fig.~\ref{raw-2} }
-\label{filter-2}
+\caption{ Curves derived from the data in Fig.~\ref{raw} }
+\label{filter}
 \end{figure}
+
+Vladimir Manucharyan has been measuring the energy spectra of the
+first CPBL device ever produced, and one of the goals of this project
+is to fit our theoretical spectra against his data. Energy curves were
+originally drawn from those data by hand, but a simple threshold
+filter can automate that process. Raw data (Fig.~\ref{raw}) can be
+filtered into sets of points suitable for fitting
+(Fig.~\ref{filter}).
 
 There are many ways to define a ``badness of fit'' for theoretical
 curves against these data. In our case, the simplest and most
@@ -364,14 +365,14 @@ B = \sum_{p \in \text{data}} (t(p)-p)^2,
 where $t(p)$ is the closest point in the theoretical data set with the
 same flux. We can then use generic multi-parameter minimization
 routines to find the best fitting values of $E_C$, $E_J$, and
-$E_L$\cite{Byrd}\cite{Zhu}. The results of this approach are displayed
+$E_L$ \cite{Byrd,Zhu}. The results of this approach are displayed
 in Figs.~\ref{pre-fit} and \ref{post-fit}.
 
 \begin{figure}
 \includegraphics[width=\linewidth]{CPBL-prefit.png}
 \caption{ An initial guess for parameter values plotted against
   experimental data from a portion of the set depicted in
-  Fig.~\ref{raw-2}. This initial guess is clearly very poor, even
+  Fig.~\ref{raw}. This initial guess is clearly very poor, even
   though none of the parameters is off by more than 20\%.}
 \label{pre-fit}
 \end{figure}
@@ -410,35 +411,34 @@ these fits.
 The process of fitting a data set requires repeatedly calculating
 energy spectra for different values of $E_C$, $E_J$, and
 $E_L$. Calculating those spectra means repeatedly solving for the
-eigenenergies of $H$ across a range of values of $\phi$
+eigenenergies of $H$ across a range of values of $\Phi$
 values. Naturally, lots of work is duplicated when these calculations
 are all performed in isolation. As it turns out, the most expensive
-operation in our case is calculating the coefficients of the
-generalized Laguerre polynomials to construct the $H$ matrix. (One
-might guess that solving for eigenvalues would be harder, but since we
-only need a handful of eigenenergies we can keep our matrices fairly
-small.) Since Laguerre polynomials obey a recursive relation, some
-time can be saved by solving for all of them at once, rather than
-separately for each element of $H$. However, a far more important
-realization is that the coefficients of $L_n^\alpha$ are independent
-of both $\phi$ and the experimental parameters, so the matrix of
-polynomials only needs to be calculated once for an entire fitting
-procedure.
+operation in our case is calculating the series expansions of the
+generalized Laguerre polynomials to construct the $H$ matrix. Since
+Laguerre polynomials obey a recursive relation, some time can be saved
+by solving for all of them at once, rather than separately for each
+element of $H$. However, a far more important realization is that,
+while the term $L_n^\alpha(\varphi_0^2/2)$ depends on the circuit
+parameters via $\varphi_0$, the coefficients in the series expansion
+of $L_n^\alpha$ are independent of both $\Phi$ and the circuit
+parameters. Thus all of those expansions only need to be calculated
+once for an entire fitting procedure.
 
 A similar speedup results from the fact that in all of
-Eqns.~\ref{inner-H0} and \ref{inner-V}, only two terms in
-Eqn.~\eqref{inner-V} depend on the value of $\phi$. Thus the majority of
+Eqns.~\eqref{inner-H0} and \eqref{inner-V}, only two terms in
+Eqn.~\eqref{inner-V} depend on the value of $\Phi$. Thus the majority of
 work needed to assemble $H$ can be done once for each trial of the
 parameters $E_C$, $E_J$, and $E_L$, rather than for every value of
-$\phi$ plotted within that trial. That leaves only one trigonometric
-term (either $\cos\left(2\pi\phi/\phi_0\right)$ or
-($\sin\left(2\pi\phi/\phi_0\right)$) to be calculated and the
+$\Phi$ plotted within that trial. That leaves only one trigonometric
+term (either $\cos\left(2\pi\Phi/\Phi_0\right)$ or
+($\sin\left(2\pi\Phi/\Phi_0\right)$) to be calculated and the
 diagonalization operation to be performed for each value of
-$\phi$. These optimizations altogether speed up a fitting operation by
+$\Phi$. These optimizations altogether speed up a fitting operation by
 almost twenty times.
 
 We achieved a second major speedup by taking advantage of the
-capabilities of modern optimization algorithms\cite{Byrd}\cite{Zhu}.
+capabilities of modern optimization algorithms \cite{Byrd,Zhu}.
 Many of these algorithms calculate local partial derivatives in order
 to improve their search for minima. Without assistance, these routines
 can approximate local derivatives by evaluating several points in
@@ -507,7 +507,7 @@ Now, going back to Eqn.~\eqref{H}, we see that
     \varphi^2}\\
   \label{dJ}
   \frac{\partial H}{\partial E_J} &= \cos(\varphi +
-  \frac{2\pi\phi}{\phi_0})\\
+  \frac{2\pi\Phi}{\Phi_0})\\
   \label{dL}
   \frac{\partial H}{\partial E_L} &= \frac{1}{2}\varphi^2.
 \end{align}
@@ -518,7 +518,7 @@ matrix form of Eqn.~\eqref{dJ}, namely the matrix $V$ without the extra
 factor of $-E_J$, and taking the inner product of that matrix with
 $\ket{\psi}$ gives us $\frac{\partial E}{\partial E_J}$.
 
-In order to deal with Eqns.~\ref{dC} and \ref{dL}, we return to the
+In order to deal with Eqns.~\eqref{dC} and \eqref{dL}, we return to the
 machinery of the SHO and recognize that
 \begin{align}
   -4\frac{\partial}{\partial \varphi^2} &= -\sqrt{\frac{E_L}{2E_C}}
@@ -541,18 +541,18 @@ All the code for our project was written in Python, making extensive
 use of the SciPy libraries. While Python is an excellent language for
 fast prototyping, Python programs have a reputation for running
 slowly, and at the beginning of our project it was unclear whether we
-could realize substantial gains in efficiency without eventually
-moving to a compiled language like C. The fact that we achieved
-efficiency gains of two orders of magnitude using Python alone
+could realize substantial gains in efficiency without ultimately
+switching to a faster platform. The fact that we achieved efficiency
+gains of two orders of magnitude over our initial Python models
 demonstrates that there was significant room for improvement both in
 the algorithmics and in the mathematics of the CPBL model. At this
 point, our code can fit a complete data set in one to two minutes, and
 thinning out the data can bring that time down to about fifteen
 seconds without significantly affecting the accuracy of the fit. We
-hope that our code will be useful to Vladimir Manucharyan and others as
-they continue to explore the CPBL, and that the techniques we
-developed will prove useful for implementing future models of the CPBL
-and other systems.
+hope that our code will help Vladimir Manucharyan and others as they
+continue to explore the CPBL, and that the techniques we developed
+will prove useful for implementing future models of the CPBL and other
+systems.
 
 \section{Acknowledgements}
 Thanks to Steven Girvin, Luigi Frunzio, and Lev Bishop for discussions
@@ -561,48 +561,48 @@ Michel Devoret for the data we analyzed in this paper, and especially
 to Jens Koch for his patient guidance.
 
 \begin{thebibliography}{9}
+\bibitem{Shor} P. W. Shor. ``Polynomial-Time Algorithms for Prime
+  Factorization and Discrete Logarithms on a Quantum Computer.''
+  \textit{SIAM Review}, Vol. 41, No. 2, pp. 303-332 (June 1999).
+
+\bibitem{Grover} L. K. Grover. ``A fast quantum mechanical algorithm
+  for database search.'' \textit{Proceedings of the twenty-eighth
+    annual ACM symposium on theory of computing}, pp. 212-219 (1996).
+
+\bibitem{Vandersypen} L. Vandersypen et al. ``Experimental realization
+  of Shor's quantum factoring algorithm using nuclear magnetic
+  resonance.'' \textit{Nature} 414, pp. 883-887 (20 December 2001).
+
 \bibitem{Blais} A. Blais. ``Quantum information processing with
   circuit quantum electrodynamics.'' arXiv:cond-mat/0402216v1 (7
   February 2004).
+
+\bibitem{Wallraff} A. Wallraff et al. ``Strong coupling of a single
+  photon to a superconducting qubit using circuit quantum
+  electrodynamics.'' \textit{Nature} 431, pp. 162-167 (9 September
+  2004).
+
+\bibitem{Nakamura} Y. Nakamura et al. ``Coherent control of
+  macroscopic quantum states in a single-Cooper-pair box.''
+  \textit{Nature} 398, pp. 786-788 (29 April 1999).
+
+\bibitem{Vion} D. Vion et al. ``Manipulating the Quantum State of an
+  Electrical Circuit.'' \textit{Science}, Vol. 3, No. 5569,
+  pp. 886-889 (3 May 2002).
+  
+\bibitem{Koch} J. Koch et al. ``Charge insensitive qubit design
+  derived from the Cooper pair box.'' arXiv:cond-mat/0703002v2 (28
+  February 2007).
+
+\bibitem{Feynman} R. P. Feynman, R. B. Leighton, and
+  M. Sands. \textit{The Feynman Lectures on Physics}. Addison-Wesley
+  Publishing Company. Vol. 3, Ch. 21-9 (1963).
 
 \bibitem{Byrd} R. H. Byrd, P. Lu, and J. Nocedal. ``A Limited Memory
   Algorithm for Bound Constrained Optimization.'' \textit{SIAM Journal
     on Scientific and Statistical Computing} 16, 5,
   pp. 1190-1208 (1995).
   
-\bibitem{Feynman} R. P. Feynman, R. B. Leighton, and
-  M. Sands. \textit{The Feynman Lectures on Physics}. Addison-Wesley
-  Publishing Company. Vol. 3, Ch. 21-9 (1963).
-
-\bibitem{Nakamura} Y. Nakamura et al. ``Coherent control of
-  macroscopic quantum states in a single-Cooper-pair box.''
-  \textit{Nature} 398, pp. 786-788 (29 April 1999).
-
-\bibitem{Grover} L. K. Grover. ``A fast quantum mechanical algorithm
-  for database search.'' \textit{Proceedings of the twenty-eighth
-    annual ACM symposium on theory of computing}, pp. 212-219 (1996).
-
-\bibitem{Koch} J. Koch et al. ``Charge insensitive qubit design
-  derived from the Cooper pair box.'' arXiv:cond-mat/0703002v2 (28
-  February 2007).
-
-\bibitem{Shor} P. W. Shor. ``Polynomial-Time Algorithms for Prime
-  Factorization and Discrete Logarithms on a Quantum Computer.''
-  \textit{SIAM Review}, Vol. 41, No. 2, pp. 303-332 (June 1999).
-
-\bibitem{Vandersypen} L. Vandersypen et al. ``Experimental realization
-  of Shor's quantum factoring algorithm using nuclear magnetic
-  resonance.'' \textit{Nature} 414, pp. 883-887 (20 December 2001).
-
-\bibitem{Vion} D. Vion et al. ``Manipulating the Quantum State of an
-  Electrical Circuit.'' \textit{Science}, Vol. 3, No. 5569,
-  pp. 886-889 (3 May 2002).
-  
-\bibitem{Wallraff} A. Wallraff et al. ``Strong coupling of a single
-  photon to a superconducting qubit using circuit quantum
-  electrodynamics.'' \textit{Nature} 431, pp. 162-167 (9 September
-  2004).
-
 \bibitem{Zhu} C. Zhu, R. H. Byrd, and J. Nocedal. ``L-BFGS-B, FORTRAN
   routines for large scale bound constrained optimization.''
   \textit{ACM Transactions on Mathematical Software} Vol 23, Num. 4,
