@@ -8,9 +8,6 @@ from scipy.special import genlaguerre, poly1d
 from scipy.optimize import *
 from random import random
 
-def id(x):
-    return x
-
 def genlaguerre_array( size ):
     height = size
     width = size
@@ -281,7 +278,6 @@ def main():
 
     MATRIX_SIZE = 20
     NUM_ENERGIES = 3
-    NUM_FLUXES = 20
 
     genlags = genlaguerre_array( MATRIX_SIZE )
 

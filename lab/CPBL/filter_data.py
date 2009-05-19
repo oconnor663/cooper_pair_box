@@ -4,6 +4,8 @@ import sys,os
 from math import sqrt
 
 def outliers( col, tolerance ):
+    """Returns the points that are outside the average phase shift (z
+ axis) range for a given column"""
     length = len(col)
     avg = 0
     avg2 = 0
@@ -16,11 +18,16 @@ def outliers( col, tolerance ):
     
     ret = []
     for i in range(length):
+        #
+        #  This is the formula for inclusion.
+        #        
         if abs(col[i]-avg)>tolerance*dev:
             ret.append(i)
     return ret
 
 def prune( points, min_neighbors ):
+    """Returns points that have at least a minimum number of adjacent neighbors
+    whoe also passed the previous test"""
 
     def good_point( point, height, width ):
         return point[0]>=0 and point[0]<height \
@@ -43,6 +50,9 @@ def prune( points, min_neighbors ):
         points[i][j] = 0
 
 def streak( points, min_streak ):
+    """Remove points from any column unless they lie in a row at least
+    min_streak points long in that column"""
+
     for col in points:
         L = len(col)
         a = 0
@@ -67,7 +77,7 @@ def main():
     MIN_STREAK = 6
 
     if len(sys.argv)<4:
-        sys.stderr.write( "Provide data, range, outfile arguments.\n" )
+        sys.stderr.write( "Provide a data file, an energies file (for the y axis), and an outfile name as arguments.\n" )
         return 1
 
     datafile = open(sys.argv[1])
@@ -104,6 +114,9 @@ def main():
     sys.stderr.write( "Streaking...\n" )
     streak(points_copy,MIN_STREAK)
 
+    #
+    # NB: THESE NEED TO BE CHANGED FOR NEW DATA SETS
+    #
     MIN_FLUX = -0.6414
     MAX_FLUX = 0.1151
     DIFF_FLUX = MAX_FLUX - MIN_FLUX
